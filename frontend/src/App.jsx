@@ -1,14 +1,32 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import DeckGL from "@deck.gl/react";
+import { LineLayer } from "@deck.gl/layers";
+
 import "./App.css";
 
+const INITIAL_VIEW_STATE = {
+  longitude: -122.41669,
+  latitude: 37.7853,
+  zoom: 13,
+  pitch: 0,
+  bearing: 0,
+};
+
+const data = [
+  {
+    sourcePosition: [-122.41669, 37.7853],
+    targetPosition: [-122.41669, 37.781],
+  },
+];
+
 function App() {
+  const layers = [new LineLayer({ id: "line-layer", data })];
+
   return (
-    <>
-      <h1>ICTFP</h1>
-    </>
+    <DeckGL
+      initialViewState={INITIAL_VIEW_STATE}
+      controller={true}
+      layers={layers}
+    />
   );
 }
-
 export default App;
