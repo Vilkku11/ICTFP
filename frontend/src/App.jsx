@@ -1,43 +1,44 @@
+import { useState } from "react";
 import DeckGL from "@deck.gl/react";
-import { LineLayer } from "@deck.gl/layers";
-
-import "./App.css";
-
-const INITIAL_VIEW_STATE = {
-  longitude: -122.41669,
-  latitude: 37.7853,
-  zoom: 13,
-  pitch: 0,
-  bearing: 0,
-};
-
-const data = [
-  {
-    sourcePosition: [-122.41669, 37.7853],
-    targetPosition: [-122.41669, 37.781],
-  },
-  {
-    sourcePosition: [-122.42669, 37.7853],
-    targetPosition: [-122.42669, 37.781],
-  },
-];
-
-const horizontalLine = [
-  {
-    sourcePosition: [-122.41669, 37.7853],
-    targetPosition: [-122.41669, 37.781],
-  },
-];
+import { MVTLayer } from "@deck.gl/geo-layers";
 
 function App() {
-  const layers = [new LineLayer({ id: "line-layer", data })];
+  const layer = new MVTLayer({
+    data: `http://0.0.0.0:3000/finland/{z}/{x}/{y}`,
+    minZoom: 0,
+    maxZoom: 14,
+    getLineColor: [192, 192, 192],
+    getFillColor: [140, 170, 180],
+    pickable: true,
+
+    getLineWidth: (f) => {
+      switch (f.properties.class) {
+        case "street":
+          return 6;
+        case "motorway":
+          return 10;
+        default:
+          return 1;
+      }
+    },
+    lineWidthMinPixels: 1,
+  });
+
+  const [viewState, setViewState] = useState({
+    longitude: 23.45,
+    latitude: 61.4981,
+    zoom: 11,
+  });
 
   return (
     <DeckGL
-      initialViewState={INITIAL_VIEW_STATE}
+      viewState={viewState}
+      onViewStateChange={(e) => setViewState(e.viewState)}
       controller={true}
-      layers={layers}
-    />
+      layers={[layer]}
+    ></DeckGL>
   );
 }
+
 export default App;
+// http://0.0.0.0:3000/finland/{z}/{x}/{y}
