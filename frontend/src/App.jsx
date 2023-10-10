@@ -16,6 +16,17 @@ const data = [
     sourcePosition: [-122.41669, 37.7853],
     targetPosition: [-122.41669, 37.781],
   },
+  {
+    sourcePosition: [-122.42669, 37.7853],
+    targetPosition: [-122.42669, 37.781],
+  },
+];
+
+const horizontalLine = [
+  {
+    sourcePosition: [-122.41669, 37.7853],
+    targetPosition: [-122.41669, 37.781],
+  },
 ];
 
 function App() {
