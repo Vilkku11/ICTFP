@@ -1,8 +1,10 @@
 import os
 from flask import Flask, send_from_directory
+from flask_cors import CORS
 from waitress import serve
 
 app = Flask(__name__, static_folder='./map/finland')
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/', defaults={'path' : ''})
 def server(path):
