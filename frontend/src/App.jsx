@@ -1,8 +1,17 @@
 import { useState } from "react";
 import DeckGL from "@deck.gl/react";
-import {StaticMap} from "react-map-gl";
+//import {StaticMap} from "react-map-gl";
 import { MVTLayer } from "@deck.gl/geo-layers";
-import {BASEMAP} from "@deck.gl/carto";
+import { BASEMAP } from "@deck.gl/carto";
+
+import {
+  Map,
+  ScaleControl,
+  FullscreenControl,
+  NavigationControl,
+} from "react-map-gl/maplibre";
+
+import "maplibre-gl/dist/maplibre-gl.css";
 
 function App() {
   const layer = new MVTLayer({
@@ -33,18 +42,24 @@ function App() {
   });
 
   return (
-  <>
-  <h1>HELLO WORLD</h1>
-  <DeckGL
-      viewState={viewState}
-      onViewStateChange={(e) => setViewState(e.viewState)}
-      controller={true}
-      layers={[layer]}
-    >
-      <StaticMap mapStyle={BASEMAP.POSITRON} />
-    </DeckGL>
-  </>
-    
+    <>
+      <Map
+        initialViewState={viewState}
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: "100%",
+        }}
+        //mapStyle={BASEMAP.POSITRON} working as a replacement
+        mapStyle="style.json"
+      >
+        <NavigationControl position="top-right" />
+        <FullscreenControl position="top-right" />
+        <ScaleControl position="bottom-right" />
+      </Map>
+    </>
   );
 }
 
