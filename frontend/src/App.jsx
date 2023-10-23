@@ -1,10 +1,12 @@
 import { useState } from "react";
 import DeckGL from "@deck.gl/react";
+import {StaticMap} from "react-map-gl";
 import { MVTLayer } from "@deck.gl/geo-layers";
+import {BASEMAP} from "@deck.gl/carto";
 
 function App() {
   const layer = new MVTLayer({
-    data: `http://0.0.0.0:3000/finland/{z}/{x}/{y}`,
+    data: `http://0.0.0.0:5000/finland/{z}/{x}/{y}`,
     minZoom: 0,
     maxZoom: 14,
     getLineColor: [192, 192, 192],
@@ -31,12 +33,18 @@ function App() {
   });
 
   return (
-    <DeckGL
+  <>
+  <h1>HELLO WORLD</h1>
+  <DeckGL
       viewState={viewState}
       onViewStateChange={(e) => setViewState(e.viewState)}
       controller={true}
       layers={[layer]}
-    ></DeckGL>
+    >
+      <StaticMap mapStyle={BASEMAP.POSITRON} />
+    </DeckGL>
+  </>
+    
   );
 }
 
