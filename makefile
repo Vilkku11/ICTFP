@@ -13,7 +13,8 @@ venv:
 # Install requirements in the virtual environment
 install:
 	. $(VENV_NAME)/bin/activate; \
-	python3.9 -m pip install -r $(REQUIREMENTS)
+	python3 -m pip install --upgrade pip
+	python3 -m pip install -r $(REQUIREMENTS)
 
 # Clean up the virtual environment
 clean:
