@@ -2,6 +2,7 @@ import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from waitress import serve
+from adsb.worker import ADSBWorker
 
 frontend_folder = '../frontend/dist'
 
@@ -24,3 +25,4 @@ def frontend(path):
 
 if __name__ == '__main__':
     serve(app, host='127.0.0.1', port=5000)
+    adsb_worker = ADSBWorker();
