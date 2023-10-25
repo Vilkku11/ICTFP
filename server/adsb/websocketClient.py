@@ -19,7 +19,7 @@ class WebSocketClient:
                 while True:
                     message = await websocket.recv();
                     
-                    #print(f"Received from server: {message}");
+                    print(f"Received from server: {message}");
                     
                     
                     if message == "close":

@@ -1,8 +1,10 @@
 import os
 from flask import Flask, send_from_directory
 from waitress import serve
+from adsb.worker import ADSBWorker
 
 app = Flask(__name__, static_folder='../frontend/dist')
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -17,3 +19,4 @@ def server(path):
 
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=8080, threads=1)
+    adsb_worker = ADSBWorker();
