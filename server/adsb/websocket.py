@@ -4,7 +4,7 @@ import json
 from logger import Logger
 
 class WebSocketServer:
-    def __init__(self, host: int, port: int, worker = None):
+    def __init__(self, host: str, port: int, worker = None):
         self.host = host
         self.port = port
         self.server = None
@@ -58,6 +58,7 @@ class WebSocketServer:
     # Send a message to all connected clients
     async def broadcast(self, message): 
         if self.clients:
+            print("clients and msg");
             await asyncio.gather(*[client.send(message) for client in self.clients])
 
     # Start websocket
@@ -84,8 +85,7 @@ class WebSocketServer:
 if __name__ == "__main__":
     # WebSocket server host and port standalone
     host = "0.0.0.0"
-    port = 8765  
-    server_uri = f"ws://{host}:{port}"
+    port = 8765
 
     server = WebSocketServer(host, port);
     asyncio.get_event_loop().run_until_complete(server.run());
