@@ -3,6 +3,8 @@ from flask import Flask, send_from_directory
 from flask_cors import CORS
 from waitress import serve
 
+frontend_folder = '../frontend/dist'
+
 app = Flask(__name__, static_folder='./map/finland')
 CORS(app, resources={r"/*": {"origins": "*"}})
 
@@ -10,6 +12,13 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 def server(path):
     if path!= "" and os.path.exists(app.static_folder + '/' + path):
         return send_from_directory(app.static_folder, path)
+@app.route('/frontend', defaults={'path': ''})
+@app.route('/<path:path>')
+def frontend(path):
+    if path != "" and os.path.exists(frontend_folder + '/' + path):
+        return send_from_directory(frontend_folder, path)
+    else:
+        return send_from_directory(frontend_folder, 'index.html')
 
 
 
