@@ -1,21 +1,16 @@
 import websockets
 import asyncio
-import json
-import threading
-import time
 
 class WebSocketClient:
     def __init__(self, server_uri):
         self.server_uri = server_uri
-        print("socket client intiated")
+
+        print("socket client initialized");
 
     async def connect_to_server(self):
         try:
             async with websockets.connect(self.server_uri) as websocket:
                 print("connected");
-                await websocket.send('{"name":"John", "age":30, "city":"New York"}');
-                time.sleep(3);
-                await websocket.send('{"name":"TEST", "age":2, "city":"New"}');
                 while True:
                     message = await websocket.recv();
                     
@@ -37,7 +32,7 @@ class WebSocketClient:
 
     async def send_message(self, message):
         async with websockets.connect(self.server_uri) as websocket:
-            await websocket.send(message)
+            await websocket.send(message);
 
 
 

@@ -5,26 +5,23 @@ from logger import Logger
 
 class WebSocketServer:
     def __init__(self, host: str, port: int, worker = None):
-        self.host = host
-        self.port = port
-        self.server = None
-        self.clients = set()
-
-        #ADS-B worker
-        self.worker = worker;
         self.logger = Logger("WebSocket");
-
         self.logger.info("Websocket server initiated");
+
+        self.host = host;                   #ip
+        self.port = port;                   #port
+        self.server = None;                 #server
+        self.clients = set();               #clients - connections
+        self.worker = worker;               #adsb -worker
     
     async def start_server(self):
-        self.server = await websockets.serve(self.handle_client, self.host, self.port)
+        self.server = await websockets.serve(self.handle_client, self.host, self.port);
 
     async def stop_server(self):
         if self.server:
             await self.broadcast("Websocket connection closed");
             self.server.close()
 
-    # On new connections - handle
     async def handle_client(self, websocket, path):
         
         self.logger.info("CLIENT CONNECTION");
@@ -39,11 +36,8 @@ class WebSocketServer:
 
                 except TypeError:
                     self.logger.error("Mistyped message: {message}");
-                    await websocket.send('{"error": 400}');
+                    await websocket.send('{ "error": 400 }');
                 
-                
-
-
         except websockets.exceptions.ConnectionClosedError:
             pass  # Client disconnected
 
@@ -51,14 +45,9 @@ class WebSocketServer:
             self.clients.remove(websocket) # remove from set
 
 
-    async def handle_client_message(self, msg):
-        pass
-
-
     # Send a message to all connected clients
     async def broadcast(self, message): 
         if self.clients:
-            print("clients and msg");
             await asyncio.gather(*[client.send(message) for client in self.clients])
 
     # Start websocket
