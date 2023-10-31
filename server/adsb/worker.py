@@ -54,7 +54,7 @@ class ADSBWorker:
             self.planes.add(Plane(msgClass));
 
 class Plane:
-    def __init__(self, msgClass):
+    def __init__(self, msg_class):
         self.updated = datetime.now();
         self.id = None;
         self.flight = None;
@@ -71,24 +71,29 @@ class Plane:
         }
 
 
-    def update(self, msgData):
+    def update(self, msg_data):
         self.updated = datetime.now();
-        self.parseMsgData(msgData);
+        self.parseMsgData(msg_data);
         
     
-    def parse_msg_data(self, msgData):
-        if msgData.oe_flag is 0:
-            self.messages.even.add(msgData.msg);
+    def parse_msg_data(self, msg_data):
+        if msg_data.oe_flag == 0:
+            self.messages.even.add(msg_data.msg);
         
-        elif msgData.oe_flag is 1:
-            self.messages.odd.add(msgData.msg);
+        elif msg_data.oe_flag == 1:
+            self.messages.odd.add(msg_data.msg);
 
     def get_json(self):
-        return f'{ 
-            self.id: {
-                
-            }
-        }';
+        msg = "{ "
+        msg += f"id: {self.id}, "
+        msg += f"flight: {self.flight}, "
+        msg += f"velocity: {self.velocity}, "
+        msg += f"position: {self.position}, "
+        msg += f"altitude: {self.altitude}, "
+        #msg += f"distance: {self.distance}, "
+        #msg += f"angles: {self.distance}, "
+        msg += " }"
+        return msg;
     
 
 
