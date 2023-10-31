@@ -8,29 +8,39 @@ class ADSBClient(TcpClient):
     def __init__(self, host, port, datatype = "beast", worker = None):
         super().__init__(host, port, datatype);
 
-        self.logger = Logger("ADSB-CLIENT");
+        self.logger = Logger("ADSB-CLIENT");    #logger - provide source as parameter
         self.logger.info("ADSB-Client initialization");
-        self.host = host
-        self.port = port
-        #ADS-B worker
-        self.worker = worker;
-        print(self.host, self.port, self.worker)
 
-        self.status = {
+        self.host = host                        #ip
+        self.port = port                        #port
+        self.worker = worker;                   #adsb worker
+        self.client = None;                     #client runtime thread object
+        self.status = {                         #client state object
             "Connection": True,
-            "last_msg": None,
+            "last_msg_ts": None,
         }
 
-        client = threading.Thread(target=self.run);
-        client.start();
-        print("beside thread");
+    #start adsb client subcriber on thread
+    def start(self):
+        if self.client == None:
+            self.client = threading.Thread(target=self.run);
+        
+        if self.client.is_alive() == False:
+            self.client.start();
+            self.logger.info(f'ADS-B -Client started listening {self.host}:{self.port}')
+    
+    #client esist we stop its subscription
+    def stop(self):
+        if self.client:
+            self.client.join();
 
+    #message handler
     def handle_messages(self, messages):
         for msg, ts in messages:
             if len(msg) != 28: #wrong datatype
                 continue
             
-            dataframe = pms.df(msg)
+            dataframe = pms.df(msg);
             
             if dataframe != 17: #not ADSB
                 continue
@@ -38,12 +48,13 @@ class ADSBClient(TcpClient):
             if pms.crc(msg) != 0: #parity check failure
                 continue
             
+            self.status["last_msg_ts"] = ts; #update last received message status
             
-            ADSBmessage(msg, ts);
-            self.status["last_msg_ts"] = ts;
-            asyncio.run(self.worker.broadcast_msg(msg));
+            asyncio.run(self.worker.broadcast_msg(msg)); #log message info to cmd
 
-    def get_adsb_status(self):
+            self.worker.parse_msg_data(ADSBmessage(msg, ts)); #provide message to worker
+    
+    def get_client_status(self):
         return self.status;
 
     
@@ -67,11 +78,8 @@ class ADSBmessage:
         #flight info
         self.id = pms.adsb.icao(msg);               # fligth identifier
         #self.callsign = pms.adsb.callsign(msg);     # callsign
-            
-        self.logger.adsb(msg);
-
-        def format(self):
-            pass
+        tmp_msg =  str(self.ts) + " " + str(self.msg_type) + " " + self.id + " " + str(self.downlink_format) + ": " + msg;
+        self.logger.adsb(tmp_msg);
 
 
 if __name__ == "__main__":
