@@ -31,8 +31,8 @@ class WebSocketServer:
             async for message in websocket:
 
                 try:
-                    json_msg = json.loads(message);
-                    self.logger.info(json_msg);
+                    self.logger.info(message);
+                    self.worker.handle_websocket_msg(message);
 
                 except TypeError:
                     self.logger.error("Mistyped message: {message}");
