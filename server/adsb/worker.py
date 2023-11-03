@@ -81,25 +81,18 @@ class ADSBWorker:
 
             # ADD virtual point
             if dict.keys(data).__contains__("add"):
-                for new_virtual_point in data["add"]:
-                    if self.id_exist(new_virtual_point["id"], self.virtual_points) == None:
-                        p = VirtualPoint(new_virtual_point);
-                        self.virtual_points.append( p );
-                        self.logger.info(f"Virtual point - { p.id } - created");
+                self.add_virtual_point(data);
 
             # UPDATE virtual point
             if dict.keys(data).__contains__("update"):
-                for existing_virtual_point in data["update"]:
-                    point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
-                    if point != None:
-                        self.logger.info(f"Virtual point - { p.id } - updated: {p.position()}");
+                try:
+                    self.update_virtual_point(data);
+                except Exception:
+                    raise Exception;
             
             # DELETE virtual point
             if dict.keys(data).__contains__("delete"):
-                for existing_virtual_point in data["delete"]:
-                    point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
-                    if point != None:
-                        self.logger.info(f"Virtual point - { p.id } - deleted");
+                self.delete_virtual_point(data);
         
         except Exception:
             return Exception;
@@ -109,6 +102,27 @@ class ADSBWorker:
             for comparable in list:
                 if id == comparable["id"]:
                     return comparable;
+
+    def add_virtual_point(self, data):
+        for new_virtual_point in data["add"]:
+            if self.id_exist(new_virtual_point["id"], self.virtual_points) == None:
+                p = VirtualPoint(new_virtual_point);
+                self.virtual_points.append( p );
+                self.logger.info(f"Virtual point - { p.id } - created");
+
+    def update_virtual_point(self, data):
+        for existing_virtual_point in data["update"]:
+                    point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
+                    if point != None:
+                        self.logger.info(f"Virtual point - { point.id } - updated: {point.position()}");
+
+    def delete_virtual_point(self, data):
+        for existing_virtual_point in data["delete"]:
+                point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
+                if point != None:
+                    self.logger.info(f"Virtual point - { point.id } - deleted");
+
+
 
 class Plane:
     def __init__(self, msg_class):
