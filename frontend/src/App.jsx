@@ -1,10 +1,10 @@
 import { useState } from "react";
-import DeckGL from "@deck.gl/react";
+//import DeckGL from "@deck.gl/react";
 //import {StaticMap} from "react-map-gl";
 import { useControl } from "react-map-gl";
 import { IconLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
-import { BASEMAP } from "@deck.gl/carto";
+//import { BASEMAP } from "@deck.gl/carto";
 
 import {
   Map,
@@ -31,6 +31,9 @@ function App() {
     longitude: 23.7601,
     latitude: 61.498,
     zoom: 11,
+    dragRotate: false,
+    touchRotate: false,
+    keyboard: false,
   });
 
   const ICON_MAPPING = {
