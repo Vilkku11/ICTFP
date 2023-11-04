@@ -1,6 +1,8 @@
 import asyncio
 import threading
 import datetime
+import json
+import uuid
 from websockets.server import serve
 from adsbclient import ADSBClient
 from websocket import WebSocketServer
@@ -37,21 +39,90 @@ class ADSBWorker:
     
     def get_adsb_status(self):
         return self.adsb_client.get_adsb_status();
-            
+
+    def get_json_data(self):
+        data = "{ "
+        
+        data += " planes: [ "
+        for plane in self.planes:
+            data += plane.get_json()
+            data += ", "
+        data += " ], "
+
+        data += " virtual_points: [ "
+        for virtual_point in self.virtual_points:
+            data += virtual_point.get_json()
+            data += ", "
+        data += " ], "
+
+
+        data += " }"
+        return data;
+
     async def broadcast_msg(self, msg):
         await self.websocket.broadcast(msg);
 
-    async def handle_message(self, msgClass):
+    async def handle_adsb_message(self, msg_class):
         found = False;
         
         for plane in self.planes:
-            if plane.id == msgClass.id:
-                plane.update(msgClass);
+            if plane.id == msg_class.id:
+                plane.update(msg_class);
                 found = True;
                 break;
 
         if not found:
-            self.planes.add(Plane(msgClass));
+            new_plane = Plane(msg_class);
+            self.planes.add(new_plane);
+
+    async def handle_websocket_msg(self, msg: str):
+        try: 
+            data = json.loads(msg); #convert json string to python object (dict)
+
+            # ADD virtual point
+            if dict.keys(data).__contains__("add"):
+                self.add_virtual_point(data);
+
+            # UPDATE virtual point
+            if dict.keys(data).__contains__("update"):
+                try:
+                    self.update_virtual_point(data);
+                except Exception:
+                    raise Exception;
+            
+            # DELETE virtual point
+            if dict.keys(data).__contains__("delete"):
+                self.delete_virtual_point(data);
+        
+        except Exception:
+            return Exception;
+
+    #checks if id is contained in list of dict
+    def id_exist(self, id, list):
+            for comparable in list:
+                if id == comparable["id"]:
+                    return comparable;
+
+    def add_virtual_point(self, data):
+        for new_virtual_point in data["add"]:
+            if self.id_exist(new_virtual_point["id"], self.virtual_points) == None:
+                p = VirtualPoint(new_virtual_point);
+                self.virtual_points.append( p );
+                self.logger.info(f"Virtual point - { p.id } - created");
+
+    def update_virtual_point(self, data):
+        for existing_virtual_point in data["update"]:
+                    point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
+                    if point != None:
+                        self.logger.info(f"Virtual point - { point.id } - updated: {point.position()}");
+
+    def delete_virtual_point(self, data):
+        for existing_virtual_point in data["delete"]:
+                point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
+                if point != None:
+                    self.logger.info(f"Virtual point - { point.id } - deleted");
+
+
 
 class Plane:
     def __init__(self, msg_class):
@@ -59,16 +130,17 @@ class Plane:
         self.id = None;
         self.flight = None;
         self.velocity = None;
-        self.position = None;
-        self.altitude = None;
-        self.distance = {};
+        self.alti = None;
+        self.longi = None;
+        self.lati = None;
+        self.distances = {};
         self.angles = {};
-
-
         self.messages = {
             self.odd: [],
             self.even: []
         }
+
+        self.update(msg_class);
 
 
     def update(self, msg_data):
@@ -78,26 +150,54 @@ class Plane:
     
     def parse_msg_data(self, msg_data):
         if msg_data.oe_flag == 0:
-            self.messages.even.add(msg_data.msg);
+            self.messages.even.append(msg_data.msg);
         
         elif msg_data.oe_flag == 1:
-            self.messages.odd.add(msg_data.msg);
+            self.messages.odd.append(msg_data.msg);
+
+    def position(self): 
+        return { "long": self.long, "lat": self.lat, "alt": self.alt};
 
     def get_json(self):
-        msg = "{ "
-        msg += f"id: {self.id}, "
-        msg += f"flight: {self.flight}, "
-        msg += f"velocity: {self.velocity}, "
-        msg += f"position: {self.position}, "
-        msg += f"altitude: {self.altitude}, "
-        #msg += f"distance: {self.distance}, "
-        #msg += f"angles: {self.distance}, "
-        msg += " }"
-        return msg;
+        obj = {
+        "id": self.id,
+        "flight": self.flight,
+        "velocity": self.velocity,
+        "position": self.position,
+        "alti": self.alti,
+        "distances": self.distances,
+        "angles": self.angles,
+        }
+        return json.dump(obj);
     
 
 
 
+class VirtualPoint:
+    def __init__(self, data: dict = None) -> None:
+        if dict.keys(data).__contains__("id"): self.id = data["id"] #initializes given id - otherwise creates uuid
+        else: self.id = uuid.uuid4();
+
+        self.logger = Logger(f"VirtualPoint::{self.id}");
+
+        #Initializes initial data for virtual_point
+        self.long = 0.0;
+        self.lat = 0.0;
+        self.alt = 0.0;
+        if dict.keys(data).__contains__("position"): self.update(data["position"]); #update data on given values
+
+
+    def update(self, position: dict):
+        if dict.keys(position).__contains__("long"): self.long = position["long"];
+        if dict.keys(position).__contains__("lat"): self.lat = position["lat"];
+        if dict.keys(position).__contains__("alt"): self.alt = position["alt"];
+    
+    def position(self):
+        return { "lat": self.lat, "long": self.long, "alt": self.alt }
+
+    def get_json(self):
+        return json.dump({"id": self.id, "position": self.position()});
+
+
 if __name__ == "__main__":
     ADSBWorker();
-
