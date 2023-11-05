@@ -1,16 +1,18 @@
 import { useState } from "react";
 //import DeckGL from "@deck.gl/react";
 //import {StaticMap} from "react-map-gl";
-import { useControl } from "react-map-gl";
+//import { useControl } from "react-map-gl";
 import { IconLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 //import { BASEMAP } from "@deck.gl/carto";
+//import * as Module from "./mapbox-gl-rtl-text.js";
 
 import {
   Map,
   ScaleControl,
   FullscreenControl,
   NavigationControl,
+  useControl,
 } from "react-map-gl/maplibre";
 
 import "maplibre-gl/dist/maplibre-gl.css";
