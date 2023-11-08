@@ -1,11 +1,13 @@
 import asyncio
 import threading
-import datetime
+from datetime import datetime
 import json
 import uuid
-from websockets.server import serve
-from adsbclient import ADSBClient
+import time
+import os
+from adsbclient import ADSBClient, ADSBmessage
 from websocket import WebSocketServer
+from csvHandler import CSVHandler
 from logger import Logger
 
 
@@ -13,11 +15,16 @@ class ADSBWorker:
     def __init__(self) -> None:
         self.logger = Logger("Worker");
 
+        self.websocket = None
+        self.adsb_client = None
         self.planes = [];
         self.virtual_points = [];
         
+        self.create_csv_handler();
         self.create_websocket("0.0.0.0", 8765);
         self.connect_adsb_client("169.254.181.198", 10002);
+        self.start_polling();
+        self.create_csv_handler();
         
 
     def connect_adsb_client(self, ip, port):
@@ -33,12 +40,25 @@ class ADSBWorker:
             self.websocket = WebSocketServer(ip, port, self);
             websocket_client = threading.Thread(target=asyncio.run, args=[self.websocket.run()])
             websocket_client.start();
-        
+
         except Exception:
             self.logger.error("Error on websocket creation");
+
+    def start_polling(self):
+        # wait for adsb client and websocket server to initialize
+        while self.websocket.server == None or self.websocket.server.is_serving() == False or self.adsb_client == None or self.adsb_client.client.is_alive() == False:
+            time.sleep(1);
+
+        self.poller = threading.Thread(target=asyncio.run , args=[self.websocket.poll(self.adsb_client.get_client_status(), 60)]);
+        self.poller.start();
+        self.logger.info("Status polling started");
     
-    def get_adsb_status(self):
-        return self.adsb_client.get_adsb_status();
+    def create_csv_handler(self):
+        def init():
+            self.csv_handler = CSVHandler(os.getcwd());
+
+        csv_handler_client = threading.Thread(init());
+        csv_handler_client.start();
 
     def get_json_data(self):
         data = "{ "
@@ -54,7 +74,6 @@ class ADSBWorker:
             data += virtual_point.get_json()
             data += ", "
         data += " ], "
-
 
         data += " }"
         return data;
@@ -74,6 +93,9 @@ class ADSBWorker:
         if not found:
             new_plane = Plane(msg_class);
             self.planes.add(new_plane);
+        
+        self.csv_handler.update_log(msg_class);
+
 
     async def handle_websocket_msg(self, msg: str):
         try: 
@@ -85,10 +107,7 @@ class ADSBWorker:
 
             # UPDATE virtual point
             if dict.keys(data).__contains__("update"):
-                try:
-                    self.update_virtual_point(data);
-                except Exception:
-                    raise Exception;
+                self.update_virtual_point(data);
             
             # DELETE virtual point
             if dict.keys(data).__contains__("delete"):
@@ -112,35 +131,37 @@ class ADSBWorker:
 
     def update_virtual_point(self, data):
         for existing_virtual_point in data["update"]:
-                    point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
-                    if point != None:
-                        self.logger.info(f"Virtual point - { point.id } - updated: {point.position()}");
+            point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
+            if point != None:
+                self.logger.info(f"Virtual point - { point.id } - updated: {point.position()}");
 
     def delete_virtual_point(self, data):
         for existing_virtual_point in data["delete"]:
-                point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
-                if point != None:
-                    self.logger.info(f"Virtual point - { point.id } - deleted");
+            point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
+            if point != None:
+                self.logger.info(f"Virtual point - { point.id } - deleted");
 
 
 
 class Plane:
-    def __init__(self, msg_class):
-        self.updated = datetime.now();
+    def __init__(self, msg_class=None):
+        self.updated = datetime.now()
         self.id = None;
         self.flight = None;
-        self.velocity = None;
-        self.alti = None;
-        self.longi = None;
-        self.lati = None;
+        self.direction = 0.0;
+        self.velocity = 0.0;
+        self.alt = 0.0;
+        self.long = 0.0;
+        self.lat = 0.0;
+        self.active = True;
         self.distances = {};
         self.angles = {};
         self.messages = {
-            self.odd: [],
-            self.even: []
+            "odd": [],
+            "even": []
         }
 
-        self.update(msg_class);
+        if msg_class: self.update(msg_class);
 
 
     def update(self, msg_data):
@@ -150,33 +171,37 @@ class Plane:
     
     def parse_msg_data(self, msg_data):
         if msg_data.oe_flag == 0:
-            self.messages.even.append(msg_data.msg);
+            self.messages["even"].append(msg_data.msg);
         
         elif msg_data.oe_flag == 1:
-            self.messages.odd.append(msg_data.msg);
+            self.messages["odd"].append(msg_data.msg);
 
     def position(self): 
-        return { "long": self.long, "lat": self.lat, "alt": self.alt};
+        return [self.lat, self.long];
 
     def get_json(self):
         obj = {
         "id": self.id,
         "flight": self.flight,
         "velocity": self.velocity,
-        "position": self.position,
-        "alti": self.alti,
+        "coordinates": self.position(),
+        "altitude": self.alt,
         "distances": self.distances,
         "angles": self.angles,
         }
-        return json.dump(obj);
+        return json.dumps(obj);
     
 
 
 
 class VirtualPoint:
     def __init__(self, data: dict = None) -> None:
-        if dict.keys(data).__contains__("id"): self.id = data["id"] #initializes given id - otherwise creates uuid
-        else: self.id = uuid.uuid4();
+
+        #initializes given id - otherwise creates uuid
+        if isinstance(data, dict) and dict.keys(data).__contains__("id"):
+            self.id = data["id"] 
+        else: 
+            self.id = str(uuid.uuid4());
 
         self.logger = Logger(f"VirtualPoint::{self.id}");
 
@@ -184,7 +209,9 @@ class VirtualPoint:
         self.long = 0.0;
         self.lat = 0.0;
         self.alt = 0.0;
-        if dict.keys(data).__contains__("position"): self.update(data["position"]); #update data on given values
+        
+        if isinstance(data, dict) and dict.keys(data).__contains__("position"):#update data on given values
+            self.update(data["position"]); 
 
 
     def update(self, position: dict):
@@ -193,11 +220,15 @@ class VirtualPoint:
         if dict.keys(position).__contains__("alt"): self.alt = position["alt"];
     
     def position(self):
-        return { "lat": self.lat, "long": self.long, "alt": self.alt }
+        return [self.lat, self.long]
 
     def get_json(self):
-        return json.dump({"id": self.id, "position": self.position()});
+        return json.dumps({"id": self.id, "position": self.position(), "altitude": self.alt});
 
 
 if __name__ == "__main__":
     ADSBWorker();
+    p = Plane();
+    print(p.get_json());
+    v = VirtualPoint();
+    print(v.get_json());

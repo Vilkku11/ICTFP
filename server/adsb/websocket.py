@@ -1,6 +1,5 @@
 import asyncio
 import websockets
-import json
 from logger import Logger
 
 class WebSocketServer:
@@ -23,9 +22,9 @@ class WebSocketServer:
             self.server.close()
 
     async def handle_client(self, websocket, path):
-        
         self.logger.info("CLIENT CONNECTION");
-        self.clients.add(websocket);
+        self.clients.add(websocket); # add to set 
+        await websocket.send(self.worker.adsb_client.get_client_status()); # responds with adsb-client status on h
 
         try:
             async for message in websocket:
@@ -44,6 +43,11 @@ class WebSocketServer:
         finally:
             self.clients.remove(websocket) # remove from set
 
+    # poll
+    async def poll(self, message, time):
+        while True:
+            await self.broadcast(message)
+            await asyncio.sleep(time)
 
     # Send a message to all connected clients
     async def broadcast(self, message): 
@@ -62,7 +66,6 @@ class WebSocketServer:
         except websockets.ConnectionClosedError: #connection dropped unexpectedly
             #TODO
             pass
-
 
     async def get_adsb_status(self):
         if self.worker:

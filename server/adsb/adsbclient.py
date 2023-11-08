@@ -1,6 +1,7 @@
 import pyModeS as pms
 import asyncio
 import threading
+import json
 from logger import Logger
 from pyModeS.extra.tcpclient import TcpClient
 
@@ -16,7 +17,7 @@ class ADSBClient(TcpClient):
         self.worker = worker;                   #adsb worker
         self.client = None;                     #client runtime thread object
         self.status = {                         #client state object
-            "Connection": True,
+            "connection": True,
             "last_msg_ts": None,
         }
 
@@ -54,11 +55,20 @@ class ADSBClient(TcpClient):
 
             self.worker.parse_msg_data(ADSBmessage(msg, ts)); #provide message to worker
     
+    def restart_client(self):
+        self.logger.info("ADS-B client restart activated");
+        self.client.run();
+
+    def check_client(self):
+        if self.client.is_alive():
+            self.status["connection"] = self.client.is_alive();
+        
+        else:
+            pass
+
+
     def get_client_status(self):
-        return self.status;
-
-    
-
+        return json.dumps({"adsb": self.status});
         
 
 
@@ -66,21 +76,47 @@ class ADSBmessage:
     def __init__(self, msg, ts) -> None:
 
         self.logger = Logger("Message");
-        
-        #message info
-        self.ts = ts;                               # timestamp
-        self.msg_type = pms.adsb.typecode(msg);     # message type
-        #self.msg_version = pms.adsb.version(msg);   # message version
-        self.downlink_format = pms.adsb.df(msg);    # downlink format
-        self.oe_flag = pms.adsb.oe_flag(msg);       # odd or even flag
-        self.msg = msg;                             # raw message
+        self.initialize(msg, ts);
 
-        #flight info
-        self.id = pms.adsb.icao(msg);               # fligth identifier
-        #self.callsign = pms.adsb.callsign(msg);     # callsign
         tmp_msg =  str(self.ts) + " " + str(self.msg_type) + " " + self.id + " " + str(self.downlink_format) + ": " + msg;
         self.logger.adsb(tmp_msg);
 
+    def __str__(self):
+        return f"{self.id}, {self.msg_type}"
+
+    def initialize(self, msg, ts):
+        #message info
+        try:
+            self.ts = ts;                               # timestamp
+        except Exception: pass;
+
+        try:
+            self.msg_type = pms.adsb.typecode(msg);     # message type
+        except Exception: pass;
+
+        try:
+            self.msg_version = pms.adsb.version(msg);   # message version
+        except Exception: pass;
+
+        try:
+            self.downlink_format = pms.adsb.df(msg);    # downlink format
+        except Exception: pass;
+
+        try:
+            self.oe_flag = pms.adsb.oe_flag(msg);       # odd or even flag
+        except Exception: pass;
+
+        try:
+            self.msg = msg;                             # raw message
+        except Exception: pass;
+
+        try:
+            self.id = pms.adsb.icao(msg);               # fligth identifier
+        except Exception: pass;
+
+        try:
+            self.callsign = pms.adsb.callsign(msg);     # callsign
+        except Exception: pass;
 
 if __name__ == "__main__":
     client = ADSBClient("169.254.32.4", 10002);
