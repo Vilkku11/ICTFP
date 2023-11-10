@@ -24,11 +24,10 @@ function DeckGLOverlay(props) {
   return null;
 }
 
-
-let testData = [
+/*let testData = [
   { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
   { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
-];
+];*/
 
 function App() {
   const [viewState, setViewState] = useState({
@@ -40,10 +39,11 @@ function App() {
     keyboard: false,
   });
 
-  const [test, setTest] = useState( [
-  { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
-  { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
-]);
+  const [test, setTest] = useState([
+    { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
+    { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
+  ]);
+  let key = test.length;
 
   const ICON_MAPPING = {
     marker: { x: 0, y: 0, width: 32, height: 32, mask: true },
@@ -61,20 +61,24 @@ function App() {
 
     sizeScale: 15,
     getPosition: (d) => d.coordinates,
+    getAngle: (d) => d.angle,
     getSize: (d) => 5,
     getColor: (d) => [Math.sqrt(d.exits), 140, 0],
   });
   const testButton = () => {
-    testData.push({name: "receiverlol", coordinates: [23.76, 62.46], angle: 20})
-   let data = test;
-   data.push({name: "receiverlol", coordinates: [23.76, 61.50], angle: 20})
-   setTest(data);
-   console.log(test);
-  }
-  
+    let data = test;
+    //data.push({ name: "receiverlol", coordinates: [23.76, 61.5], angle: 20 });
+    data[0].coordinates[0] = data[0].coordinates[0] + 0.01;
+    data[1].angle = data[1].angle + 1;
+    setTest([...data]);
+    key = data.length;
+    console.log(test);
+    console.log(test[1].angle);
+  };
+
   return (
     <>
-    <button onClick={testButton}>test</button>
+      <button onClick={testButton}>test</button>
       <Map
         initialViewState={viewState}
         style={{
@@ -90,12 +94,14 @@ function App() {
         <NavigationControl position="top-right" />
         <FullscreenControl position="top-right" />
         <ScaleControl position="bottom-right" />
-        <AttributionControl customAttribution="© OpenMapTiles © OpenStreetMap contributors"
-         position="bottom-left" />
+        <AttributionControl
+          customAttribution="© OpenMapTiles © OpenStreetMap contributors"
+          position="bottom-left"
+        />
         <DeckGLOverlay
           layers={[iconLayer]}
           getTooltip={({ object }) => object && `${object.name}`}
-       />
+        />
       </Map>
     </>
   );
