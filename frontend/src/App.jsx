@@ -13,6 +13,7 @@ import {
   FullscreenControl,
   NavigationControl,
   useControl,
+  AttributionControl,
 } from "react-map-gl/maplibre";
 
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -22,6 +23,7 @@ function DeckGLOverlay(props) {
   overlay.setProps(props);
   return null;
 }
+
 
 let testData = [
   { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
@@ -38,13 +40,18 @@ function App() {
     keyboard: false,
   });
 
+  const [test, setTest] = useState( [
+  { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
+  { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
+]);
+
   const ICON_MAPPING = {
     marker: { x: 0, y: 0, width: 32, height: 32, mask: true },
   };
 
   const iconLayer = new IconLayer({
     id: "icon-layer",
-    data: testData,
+    data: test,
     pickable: true,
     // iconAtlas and iconMapping are required
     // getIcon: return a string
@@ -57,17 +64,25 @@ function App() {
     getSize: (d) => 5,
     getColor: (d) => [Math.sqrt(d.exits), 140, 0],
   });
-
+  const testButton = () => {
+    testData.push({name: "receiverlol", coordinates: [23.76, 62.46], angle: 20})
+   let data = test;
+   data.push({name: "receiverlol", coordinates: [23.76, 61.50], angle: 20})
+   setTest(data);
+   console.log(test);
+  }
+  
   return (
     <>
+    <button onClick={testButton}>test</button>
       <Map
         initialViewState={viewState}
         style={{
           position: "absolute",
           top: 0,
           bottom: 0,
-          left: 0,
-          width: "100%",
+          left: "50%",
+          width: "50%",
         }}
         //mapStyle={BASEMAP.POSITRON} working as a replacement
         mapStyle="style.json"
@@ -75,11 +90,12 @@ function App() {
         <NavigationControl position="top-right" />
         <FullscreenControl position="top-right" />
         <ScaleControl position="bottom-right" />
-
+        <AttributionControl customAttribution="© OpenMapTiles © OpenStreetMap contributors"
+         position="bottom-left" />
         <DeckGLOverlay
           layers={[iconLayer]}
           getTooltip={({ object }) => object && `${object.name}`}
-        />
+       />
       </Map>
     </>
   );
