@@ -7,6 +7,8 @@ import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 //import { BASEMAP } from "@deck.gl/carto";
 //import * as Module from "./mapbox-gl-rtl-text.js";
 
+import Socket from "./Socket";
+
 import {
   Map,
   ScaleControl,
@@ -43,44 +45,65 @@ function App() {
     { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
     { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
   ]);
-  let key = test.length;
+
+  const handleIconSize = (zoom) => {
+    const baseSize = 50;
+    const saturationZoom = 9;
+
+    const zoomMultiplier = 0.09;
+    const sizeMultiplier = zoom <= saturationZoom ? zoom * zoomMultiplier : 1;
+    const iconSize = baseSize * sizeMultiplier;
+    setIconSize(iconSize);
+  };
 
   const ICON_MAPPING = {
-    marker: { x: 0, y: 0, width: 32, height: 32, mask: true },
+    marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
   };
+  const [iconSize, setIconSize] = useState(50);
 
   const iconLayer = new IconLayer({
     id: "icon-layer",
     data: test,
     pickable: true,
+    onHover: (info, event) => console.log("Hovered:", info.object),
+    onClick: (info, event) => console.log("Clicked:", event),
     // iconAtlas and iconMapping are required
     // getIcon: return a string
-    iconAtlas: "plane.svg",
+    iconAtlas: "airplane.svg",
     iconMapping: ICON_MAPPING,
     getIcon: (d) => "marker",
-
-    sizeScale: 15,
     getPosition: (d) => d.coordinates,
     getAngle: (d) => d.angle,
-    getSize: (d) => 5,
+    getSize: (d) => iconSize,
     getColor: (d) => [Math.sqrt(d.exits), 140, 0],
+    updateTriggers: {
+      getSize: iconSize,
+    },
   });
   const testButton = () => {
     let data = test;
     //data.push({ name: "receiverlol", coordinates: [23.76, 61.5], angle: 20 });
-    data[0].coordinates[0] = data[0].coordinates[0] + 0.01;
-    data[1].angle = data[1].angle + 1;
-    setTest([...data]);
+    //data[0].coordinates[0] = data[0].coordinates[0] + 0.01;
+    //data[1].angle = data[1].angle + 1;
+    if (data.length >= 1) {
+      data.pop();
+    } else if (data.length == 0) {
+      data.push({ name: "receiverlol", coordinates: [23.76, 61.5], angle: 20 });
+    }
+    console.log(viewState.zoom);
+    setTest(...[data]);
     key = data.length;
     console.log(test);
-    console.log(test[1].angle);
   };
 
   return (
     <>
+      <Socket onReceiveMessage={"test"} />
       <button onClick={testButton}>test</button>
       <Map
         initialViewState={viewState}
+        onMove={(evt) => setViewState(evt.viewState)}
+        onZoom={() => handleIconSize(viewState.zoom)}
         style={{
           position: "absolute",
           top: 0,
@@ -100,7 +123,7 @@ function App() {
         />
         <DeckGLOverlay
           layers={[iconLayer]}
-          getTooltip={({ object }) => object && `${object.name}`}
+          getTooltip={({ object }) => object && `${object.name}` + `${object}`}
         />
       </Map>
     </>
