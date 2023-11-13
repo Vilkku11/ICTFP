@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const Socket = (props) => {
+function Socket(props) {
   const [socket, setSocket] = useState(null);
 
   //const URL = "ws://0.0.0.0:8765"; new WebSocket("ws://0.0.0.0:8765")
@@ -40,6 +40,6 @@ const Socket = (props) => {
   }, []);
 
   return null;
-};
+}
 
 export default Socket;

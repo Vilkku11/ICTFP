@@ -2,7 +2,7 @@ import { useState } from "react";
 //import DeckGL from "@deck.gl/react";
 //import {StaticMap} from "react-map-gl";
 //import { useControl } from "react-map-gl";
-import { IconLayer } from "@deck.gl/layers";
+import { IconLayer, TextLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 //import { BASEMAP } from "@deck.gl/carto";
 //import * as Module from "./mapbox-gl-rtl-text.js";
@@ -20,6 +20,7 @@ import {
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
+// Rendering all Layers on top of the map
 function DeckGLOverlay(props) {
   const overlay = useControl(() => new MapboxOverlay(props));
   overlay.setProps(props);
@@ -36,36 +37,24 @@ function App() {
     keyboard: false,
   });
 
-  const [test, setTest] = useState([
+  const [iconSize, setIconSize] = useState(50);
+  const [textSize, setTextSize] = useState(15);
+
+  const [testPlanes, setTestPlanes] = useState([
     { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
     { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
   ]);
 
-  const handleIconSize = (zoom) => {
-    const baseSize = 50;
-    const saturationZoom = 9;
-
-    const zoomMultiplier = 0.09;
-    const sizeMultiplier = zoom <= saturationZoom ? zoom * zoomMultiplier : 1;
-    const iconSize = baseSize * sizeMultiplier;
-    setIconSize(iconSize);
-  };
-
-  const ICON_MAPPING = {
-    marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
-  };
-  const [iconSize, setIconSize] = useState(50);
-
   const iconLayer = new IconLayer({
     id: "icon-layer",
-    data: test,
+    data: testPlanes,
     pickable: true,
     onHover: (info, event) => console.log("Hovered:", info.object),
     onClick: (info, event) => console.log("Clicked:", event),
-    // iconAtlas and iconMapping are required
-    // getIcon: return a string
     iconAtlas: "airplane.svg",
-    iconMapping: ICON_MAPPING,
+    iconMapping: {
+      marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
+    },
     getIcon: (d) => "marker",
     getPosition: (d) => d.coordinates,
     getAngle: (d) => d.angle,
@@ -75,7 +64,76 @@ function App() {
       getSize: iconSize,
     },
   });
-  const testButton = () => {
+
+  const textLayer = new TextLayer({
+    id: "text-layer",
+    data: testPlanes,
+    pickable: true,
+    background: true,
+    getPosition: (d) => [d.coordinates[0], d.coordinates[1] + 0.005],
+    getText: (d) => d.name,
+    getSize: (d) => textSize,
+    updateTriggers: {
+      getSize: textSize,
+    },
+  });
+
+  const handleIconSize = (zoom) => {
+    const baseSize = 50;
+    const saturationZoom = 9;
+    const zoomMultiplier = 0.09;
+    const sizeMultiplier = zoom <= saturationZoom ? zoom * zoomMultiplier : 1;
+    const iconSize = baseSize * sizeMultiplier;
+    setIconSize(iconSize);
+  };
+  const handleTextSize = (zoom) => {
+    const baseSize = 15;
+    const saturationZoom = 9;
+    const zoomMultiplier = 0.09;
+    const sizeMultiplier = zoom <= saturationZoom ? zoom * zoomMultiplier : 1;
+    const textSize = baseSize * sizeMultiplier;
+    setTextSize(textSize);
+  };
+
+  return (
+    <>
+      <Socket onReceiveMessage={"test"} />
+      <Map
+        initialViewState={viewState}
+        onMove={(evt) => setViewState(evt.viewState)}
+        onZoom={() => {
+          handleIconSize(viewState.zoom);
+          handleTextSize(viewState.zoom);
+        }}
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: "100%",
+        }}
+        mapStyle="style.json"
+      >
+        <NavigationControl position="top-right" />
+        <FullscreenControl position="top-right" />
+        <ScaleControl position="bottom-right" />
+        <AttributionControl
+          customAttribution="© OpenMapTiles © OpenStreetMap contributors"
+          position="bottom-left"
+        />
+        <DeckGLOverlay
+          layers={[iconLayer, textLayer]}
+          getTooltip={({ object }) => object && `${object.name}` + `${object}`}
+        />
+      </Map>
+    </>
+  );
+}
+
+export default App;
+// http://0.0.0.0:3000/finland/{z}/{x}/{y}
+
+/*const testButton = () => {
     let data = test;
     //data.push({ name: "receiverlol", coordinates: [23.76, 61.5], angle: 20 });
     //data[0].coordinates[0] = data[0].coordinates[0] + 0.01;
@@ -86,45 +144,9 @@ function App() {
       data.push({ name: "receiverlol", coordinates: [23.76, 61.5], angle: 20 });
     }
     console.log(viewState.zoom);
+
+    // shallow check
     setTest(...[data]);
     key = data.length;
     console.log(test);
-  };
-
-  return (
-    <>
-      <Socket onReceiveMessage={"test"} />
-      <button onClick={testButton}>test</button>
-      <Map
-        initialViewState={viewState}
-        onMove={(evt) => setViewState(evt.viewState)}
-        onZoom={() => handleIconSize(viewState.zoom)}
-        style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: "50%",
-          width: "50%",
-        }}
-        //mapStyle={BASEMAP.POSITRON} working as a replacement
-        mapStyle="style.json"
-        setRTLTextPlugin={"s"}
-      >
-        <NavigationControl position="top-right" />
-        <FullscreenControl position="top-right" />
-        <ScaleControl position="bottom-right" />
-        <AttributionControl
-          customAttribution="© OpenMapTiles © OpenStreetMap contributors"
-          position="bottom-left"
-        />
-        <DeckGLOverlay
-          layers={[iconLayer]}
-          getTooltip={({ object }) => object && `${object.name}` + `${object}`}
-        />
-      </Map>
-    </>
-  );
-}
-
-export default App;
-// http://0.0.0.0:3000/finland/{z}/{x}/{y}
+  };*/
