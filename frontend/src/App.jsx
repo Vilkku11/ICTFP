@@ -26,11 +26,6 @@ function DeckGLOverlay(props) {
   return null;
 }
 
-/*let testData = [
-  { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
-  { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
-];*/
-
 function App() {
   const [viewState, setViewState] = useState({
     longitude: 23.7601,
@@ -113,6 +108,7 @@ function App() {
         }}
         //mapStyle={BASEMAP.POSITRON} working as a replacement
         mapStyle="style.json"
+        setRTLTextPlugin={"s"}
       >
         <NavigationControl position="top-right" />
         <FullscreenControl position="top-right" />
