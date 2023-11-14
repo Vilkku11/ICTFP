@@ -1,23 +1,17 @@
 import os
 import threading
 import logging 
-import asyncio
 from flask import Flask, send_from_directory
-from flask_cors import CORS
 from waitress import serve
+
 from adsb.worker import ADSBWorker
-#from sanic import Sanic
 
-#app = Sanic(__name__);
-
-#app.static('/','../frontend/dist')
 logging_waitress = logging.getLogger('waitress.queue').warning('');
 
 frontend_folder = '../frontend/dist'
 
 app2 = Flask(__name__, static_folder='./map/finland')
 
-#CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app2.route('/', defaults={'path' : ''})
 def server(path):
