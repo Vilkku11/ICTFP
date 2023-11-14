@@ -95,7 +95,9 @@ class ADSBWorker:
             new_plane = Plane(msg_class);
             self.planes.append(new_plane);
         
-        if self.csv_handler != None: self.csv_handler.update_log(msg_class.get_csv()); #persist message to csv
+        if self.csv_handler != None: self.csv_handler.update_log(msg_class); #persist message to csv
+    
+        print(self.get_json_data());
 
 
     async def handle_websocket_msg(self, msg: str):

@@ -1,6 +1,5 @@
-from adsb.logger import Logger
+from adsb.logger import Logger;
 import datetime
-import time
 import os
 
 class CSVHandler:
@@ -22,33 +21,31 @@ class CSVHandler:
             self.logger.info("CSV log folder has been created");
     
     def open_csv_file(self, message):
-        if self.csv_f == None: # create log file
-            print("open csv")
-            try: 
-                file_name = time.strftime("%Y_%m_%d", message.ts)+"_log.csv";
-                self.current_file = self.log_path + file_name; 
-                print("current file: ", self.current_file);
-                self.csv_f = open(self.current_file, "a+");
-                if self.csv_f != None:
-                    self.logger.info(f"CSV-handler has opened file: {file_name}");
-                
-            except Exception:
-                self.logger.error(f"Couldn't open file: {self.current_file}");
+        
+        try: 
+            date = str(datetime.datetime.fromtimestamp(message.ts).strftime("%Y_%m_%d")); # parse message timestamp
+            comparable_path = self.log_path+ "/" + date +"_log.csv";  # filename with full path
+
+            if self.csv_f == None or self.current_file != comparable_path: # create/change file format
+                self.current_file = comparable_path;
+            
+            self.csv_f = open(self.current_file, "a+"); # create file if not present / append to file
+
+            
+        except Exception:
+            self.logger.error(f"Couldn't open file: {self.current_file}");
 
 
     def close_csv_file(self):
         if self.csv_f and not self.csv_f.closed:
-            print("close csv");
             self.csv_f.close();
             self.csv_f = None;
 
     def update_log(self, message):
-        print("log update: ", self.current_file, str(message))
         try:
             self.open_csv_file(message);
-            print(self.log_path, self.current_file);
             try:
-                self.csv_f.write(str(message));
+                self.csv_f.writelines(str(message.get_csv()));
         
             except Exception:
                 self.logger.error("Couldn't write to file");

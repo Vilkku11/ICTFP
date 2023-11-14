@@ -2,6 +2,7 @@ import pyModeS as pms
 import asyncio
 import threading
 import json
+import datetime
 from adsb.logger import Logger
 from pyModeS.extra.tcpclient import TcpClient
 
@@ -51,10 +52,11 @@ class ADSBClient(TcpClient):
             
             self.status["last_msg_ts"] = ts; #update last received message status
             
-            asyncio.run(self.worker.broadcast_msg(msg)); #broadcast message
-            adsb_message = ADSBmessage(msg, ts)
-            print(adsb_message);
-            asyncio.run(self.worker.handle_adsb_message(adsb_message)); #provide message to worker
+            asyncio.run(self.worker.broadcast_msg(msg)); # broadcast message
+
+            adsb_message = ADSBmessage(msg, ts); # create class instance
+            
+            asyncio.run(self.worker.handle_adsb_message(adsb_message)); # provide message to worker
     
     def restart_client(self):
         self.logger.info("ADS-B client restart activated");
@@ -89,20 +91,35 @@ class ADSBmessage:
 
         self.initialize(msg, ts);
 
-        #tmp_msg =  str(self.ts) + " " + str(self.msg_type) + " " + self.id + " " + str(self.downlink_format) + ": " + msg;
-        #self.logger.adsb(tmp_msg);
-
     def get_csv(self):
-        csv_str = f"{self.id}, "
-        if self.msg_type != None: csv_str += f"{self.msg_type}, ";
+        dateformat = '%Y-%m-%d %H:%M:%S.%f';
+        csv_str = "";
+
+        if self.ts != None: csv_str += f"{str(datetime.datetime.fromtimestamp(self.ts).strftime(dateformat))}, ";
+        else: csv_str += "null, ";
+
+        if self.id != None: csv_str += f"{self.id}, ";
+        else: csv_str += "null, ";
+
+        if self.msg_type != None: csv_str += f"{self.msg_type}, "
+        else: csv_str += "null, ";
+
         if self.msg_version != None: csv_str += f"{self.msg_type}, ";
-        if self.downlink_format != None: csv_str += f"{self.downlink_format}, ";
-        if self.ts != None: csv_str += f"{self.ts}, ";
-        if self.oe_flag != None: csv_str += f"{self.oe_flag}, ";
-        if self.callsign != None: csv_str += f"{self.callsign}, ";
-        if self.msg != None: csv_str += f"{self.msg}; "
+        else: csv_str += "null, ";
         
-        return csv_str;
+        if self.downlink_format != None: csv_str += f"{self.downlink_format}, ";
+        else: csv_str += "null, ";
+
+        if self.oe_flag != None: csv_str += f"{self.oe_flag}, ";
+        else: csv_str += "null, ";
+
+        if self.callsign != None: csv_str += f"{self.callsign}, ";
+        else: csv_str += "null, ";
+        
+        if self.msg != None: csv_str += f"{self.msg}; "
+        else: csv_str += "null, ";
+        print(csv_str);
+        return csv_str+"\n";
 
     def initialize(self, msg, ts):
         #message info
