@@ -8,6 +8,7 @@ import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 //import * as Module from "./mapbox-gl-rtl-text.js";
 
 import Socket from "./Socket";
+import Status from "./components/Status";
 
 import {
   Map,
@@ -39,6 +40,9 @@ function App() {
 
   const [iconSize, setIconSize] = useState(50);
   const [textSize, setTextSize] = useState(15);
+
+  //Temporary
+  const [webSocket, setWebSocket] = useState(false);
 
   const [testPlanes, setTestPlanes] = useState([
     { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
@@ -97,7 +101,7 @@ function App() {
 
   return (
     <>
-      <Socket onReceiveMessage={"test"} />
+      <Socket setWebSocket={setWebSocket} />
       <Map
         initialViewState={viewState}
         onMove={(evt) => setViewState(evt.viewState)}
@@ -126,6 +130,7 @@ function App() {
           getTooltip={({ object }) => object && `${object.name}` + `${object}`}
         />
       </Map>
+      <Status webSocket={webSocket} />
     </>
   );
 }

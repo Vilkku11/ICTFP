@@ -10,6 +10,7 @@ function Socket(props) {
 
     newSocket.onopen = () => {
       console.log("Websocket OPEN");
+      props.setWebSocket(true);
     };
 
     newSocket.onmessage = (event) => {
@@ -25,6 +26,7 @@ function Socket(props) {
     newSocket.onclose = (event) => {
       console.log("Websocket closed");
       console.log(event);
+      props.setWebSocket(false);
     };
 
     setSocket(newSocket);

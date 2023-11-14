@@ -2,6 +2,7 @@ import os
 import threading
 import logging 
 from flask import Flask, send_from_directory
+from flask_cors import CORS
 from waitress import serve
 
 from adsb.worker import ADSBWorker
@@ -11,7 +12,7 @@ logging_waitress = logging.getLogger('waitress.queue').warning('');
 frontend_folder = '../frontend/dist'
 
 app2 = Flask(__name__, static_folder='./map/finland')
-
+CORS(app2, resources={r"/*": {"origins": "*"}})
 
 @app2.route('/', defaults={'path' : ''})
 def server(path):
@@ -35,9 +36,9 @@ def start_worker():
 if __name__ == '__main__':
     
     #serve(app2, host='127.0.0.1', port=5000, clear_untrusted_proxy_headers=True);
-    #server = threading.Thread(target=run_server)
+    server = threading.Thread(target=run_server)
     worker = threading.Thread(target=start_worker)
-    #server.start();
+    server.start();
     worker.start();
 
 
