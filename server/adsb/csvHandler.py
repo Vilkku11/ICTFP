@@ -1,4 +1,4 @@
-from logger import Logger
+from adsb.logger import Logger
 import datetime
 import time
 import os
@@ -10,6 +10,7 @@ class CSVHandler:
         self.log_path = "";
         self.csv_f = None;
         self.init_folder(path);
+        self.logger.info("CSV-handler started");
 
     def __del__(self):
         self.close_csv_file();
@@ -22,30 +23,30 @@ class CSVHandler:
     
     def open_csv_file(self, message):
         if self.csv_f == None: # create log file
+            print("open csv")
             try: 
                 file_name = time.strftime("%Y_%m_%d", message.ts)+"_log.csv";
-                file_path = self.log_path + file_name; 
-                self.csv_f = open(file_path, "a+");
+                self.current_file = self.log_path + file_name; 
+                print("current file: ", self.current_file);
+                self.csv_f = open(self.current_file, "a+");
+                if self.csv_f != None:
+                    self.logger.info(f"CSV-handler has opened file: {file_name}");
                 
             except Exception:
-                self.logger.error(f"Couldn't open file: {file_path}")
+                self.logger.error(f"Couldn't open file: {self.current_file}");
 
-            finally:
-                try:
-                    if self.csv_f:
-                        self.logger.info(f"CSV-handler has opened file: {file_name}");
-                
-                except Exception:
-                    raise ValueError
 
     def close_csv_file(self):
         if self.csv_f and not self.csv_f.closed:
+            print("close csv");
             self.csv_f.close();
+            self.csv_f = None;
 
     def update_log(self, message):
+        print("log update: ", self.current_file, str(message))
         try:
             self.open_csv_file(message);
-
+            print(self.log_path, self.current_file);
             try:
                 self.csv_f.write(str(message));
         

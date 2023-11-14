@@ -1,6 +1,6 @@
 import asyncio
 import websockets
-from logger import Logger
+from adsb.logger import Logger
 
 class WebSocketServer:
     def __init__(self, host: str, port: int, worker = None):
@@ -43,7 +43,7 @@ class WebSocketServer:
         finally:
             self.clients.remove(websocket) # remove from set
 
-    # poll
+    # polling
     async def poll(self, message, time):
         while True:
             await self.broadcast(message)
