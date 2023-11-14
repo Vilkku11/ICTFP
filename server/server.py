@@ -1,5 +1,7 @@
 import os
+import threading
 import logging 
+import asyncio
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from waitress import serve
@@ -14,6 +16,7 @@ logging_waitress = logging.getLogger('waitress.queue').warning('');
 frontend_folder = '../frontend/dist'
 
 app2 = Flask(__name__, static_folder='./map/finland')
+
 #CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app2.route('/', defaults={'path' : ''})
@@ -29,9 +32,20 @@ def frontend(path):
     else:
         return send_from_directory(frontend_folder, 'index.html')
 
+def run_server():
+    serve(app2, host="127.0.0.1", port=5000, clear_untrusted_proxy_headers=True);
 
+def start_worker():
+    worker = ADSBWorker();
 
 if __name__ == '__main__':
-    adsb_worker = ADSBWorker();
-    serve(app2, host='127.0.0.1', port=5000, clear_untrusted_proxy_headers=True);
+    
+    #serve(app2, host='127.0.0.1', port=5000, clear_untrusted_proxy_headers=True);
+    #server = threading.Thread(target=run_server)
+    worker = threading.Thread(target=start_worker)
+    #server.start();
+    worker.start();
+
+
+
     
