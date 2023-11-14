@@ -51,9 +51,10 @@ class ADSBClient(TcpClient):
             
             self.status["last_msg_ts"] = ts; #update last received message status
             
-            asyncio.run(self.worker.broadcast_msg(msg)); #log message info to cmd
-
-            self.worker.parse_msg_data(ADSBmessage(msg, ts)); #provide message to worker
+            asyncio.run(self.worker.broadcast_msg(msg)); #broadcast message
+            adsb_message = ADSBmessage(msg, ts)
+            print(adsb_message);
+            asyncio.run(self.worker.handle_adsb_message(adsb_message)); #provide message to worker
     
     def restart_client(self):
         self.logger.info("ADS-B client restart activated");
@@ -76,13 +77,32 @@ class ADSBmessage:
     def __init__(self, msg, ts) -> None:
 
         self.logger = Logger("Message");
+        
+        self.id = None
+        self.msg_type = None
+        self.msg_version = None
+        self.downlink_format = None
+        self.ts = None
+        self.oe_flag = None
+        self.callsign = None
+        self.msg = None
+
         self.initialize(msg, ts);
 
-        tmp_msg =  str(self.ts) + " " + str(self.msg_type) + " " + self.id + " " + str(self.downlink_format) + ": " + msg;
-        self.logger.adsb(tmp_msg);
+        #tmp_msg =  str(self.ts) + " " + str(self.msg_type) + " " + self.id + " " + str(self.downlink_format) + ": " + msg;
+        #self.logger.adsb(tmp_msg);
 
-    def __str__(self):
-        return f"{self.id}, {self.msg_type}"
+    def get_csv(self):
+        csv_str = f"{self.id}, "
+        if self.msg_type != None: csv_str += f"{self.msg_type}, ";
+        if self.msg_version != None: csv_str += f"{self.msg_type}, ";
+        if self.downlink_format != None: csv_str += f"{self.downlink_format}, ";
+        if self.ts != None: csv_str += f"{self.ts}, ";
+        if self.oe_flag != None: csv_str += f"{self.oe_flag}, ";
+        if self.callsign != None: csv_str += f"{self.callsign}, ";
+        if self.msg != None: csv_str += f"{self.msg}; "
+        
+        return csv_str;
 
     def initialize(self, msg, ts):
         #message info

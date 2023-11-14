@@ -17,17 +17,17 @@ class ADSBWorker:
 
         self.websocket = None
         self.adsb_client = None
+        self.csv_handler = None
         self.planes = [];
         self.virtual_points = [];
         
-        self.create_csv_handler();
         self.create_websocket("0.0.0.0", 8765);
-        self.connect_adsb_client("169.254.181.198", 10002);
+        self.connect_adsb_client("169.254.185.142", 10002);
         self.start_polling();
         self.create_csv_handler();
         
 
-    def connect_adsb_client(self, ip, port):
+    def connect_adsb_client(self, ip, port): # connect to adsb client
         try:
             self.adsb_client = ADSBClient(ip, port, "beast", self);
             self.adsb_client.start();
@@ -35,7 +35,7 @@ class ADSBWorker:
         except Exception:
             self.logger.error("Connection error on adsb client");
 
-    def create_websocket(self, ip, port):
+    def create_websocket(self, ip, port): # create and start websocket
         try: 
             self.websocket = WebSocketServer(ip, port, self);
             websocket_client = threading.Thread(target=asyncio.run, args=[self.websocket.run()])
@@ -44,7 +44,8 @@ class ADSBWorker:
         except Exception:
             self.logger.error("Error on websocket creation");
 
-    def start_polling(self):
+    def start_polling(self): # start status polling 
+
         # wait for adsb client and websocket server to initialize
         while self.websocket.server == None or self.websocket.server.is_serving() == False or self.adsb_client == None or self.adsb_client.client.is_alive() == False:
             time.sleep(1);
@@ -53,14 +54,14 @@ class ADSBWorker:
         self.poller.start();
         self.logger.info("Status polling started");
     
-    def create_csv_handler(self):
+    def create_csv_handler(self): # create and start csv handler to persist messages
         def init():
             self.csv_handler = CSVHandler(os.getcwd());
 
         csv_handler_client = threading.Thread(init());
         csv_handler_client.start();
 
-    def get_json_data(self):
+    def get_json_data(self): # parse and return current planes and virtual points as json
         data = "{ "
         
         data += " planes: [ "
@@ -78,23 +79,23 @@ class ADSBWorker:
         data += " }"
         return data;
 
-    async def broadcast_msg(self, msg):
+    async def broadcast_msg(self, msg): # sen message to all clients
         await self.websocket.broadcast(msg);
 
     async def handle_adsb_message(self, msg_class):
         found = False;
         
         for plane in self.planes:
-            if plane.id == msg_class.id:
+            if plane.id == msg_class.id: # previous match - update instance
                 plane.update(msg_class);
                 found = True;
                 break;
 
-        if not found:
+        if not found: # no previous matches - Create new instace 
             new_plane = Plane(msg_class);
-            self.planes.add(new_plane);
+            self.planes.append(new_plane);
         
-        self.csv_handler.update_log(msg_class);
+        if self.csv_handler != None: self.csv_handler.update_log(msg_class.get_csv()); #persist message to csv
 
 
     async def handle_websocket_msg(self, msg: str):
@@ -166,7 +167,7 @@ class Plane:
 
     def update(self, msg_data):
         self.updated = datetime.now();
-        self.parseMsgData(msg_data);
+        self.parse_msg_data(msg_data);
         
     
     def parse_msg_data(self, msg_data):
@@ -228,7 +229,7 @@ class VirtualPoint:
 
 if __name__ == "__main__":
     ADSBWorker();
-    p = Plane();
-    print(p.get_json());
-    v = VirtualPoint();
-    print(v.get_json());
+    #p = Plane();
+    #print(p.get_json());
+    #v = VirtualPoint();
+    #print(v.get_json());
