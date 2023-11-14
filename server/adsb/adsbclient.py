@@ -2,7 +2,7 @@ import pyModeS as pms
 import asyncio
 import threading
 import json
-from logger import Logger
+from adsb.logger import Logger
 from pyModeS.extra.tcpclient import TcpClient
 
 class ADSBClient(TcpClient):

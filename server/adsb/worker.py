@@ -5,10 +5,10 @@ import json
 import uuid
 import time
 import os
-from adsbclient import ADSBClient, ADSBmessage
-from websocket import WebSocketServer
-from csvHandler import CSVHandler
-from logger import Logger
+from adsb.adsbclient import ADSBClient
+from adsb.websocket import WebSocketServer
+from adsb.csvHandler import CSVHandler
+from adsb.logger import Logger
 
 
 class ADSBWorker:
@@ -22,7 +22,7 @@ class ADSBWorker:
         self.virtual_points = [];
         
         self.create_websocket("0.0.0.0", 8765);
-        self.connect_adsb_client("169.254.185.142", 10002);
+        self.connect_adsb_client("169.254.185.49", 10002);
         self.start_polling();
         self.create_csv_handler();
         

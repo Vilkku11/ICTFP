@@ -1,6 +1,6 @@
 import asyncio
 import websockets
-from logger import Logger
+from adsb.logger import Logger
 
 class WebSocketServer:
     def __init__(self, host: str, port: int, worker = None):
