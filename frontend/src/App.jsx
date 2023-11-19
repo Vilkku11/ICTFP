@@ -1,15 +1,6 @@
 import { useState } from "react";
-//import DeckGL from "@deck.gl/react";
-//import {StaticMap} from "react-map-gl";
-//import { useControl } from "react-map-gl";
 import { IconLayer, TextLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
-//import { BASEMAP } from "@deck.gl/carto";
-//import * as Module from "./mapbox-gl-rtl-text.js";
-
-import Socket from "./Socket";
-import Status from "./components/Status";
-
 import {
   Map,
   ScaleControl,
@@ -18,6 +9,10 @@ import {
   useControl,
   AttributionControl,
 } from "react-map-gl/maplibre";
+
+import Socket from "./Socket";
+import Status from "./components/Status";
+import InfoCard from "./components/InfoCard";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -47,6 +42,10 @@ function App() {
   const [testPlanes, setTestPlanes] = useState([
     { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
     { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
+  ]);
+
+  const [waypoints, setWaypoints] = useState([
+    { name: "first", coordinates: [23.7609, 61.48] },
   ]);
 
   const iconLayer = new IconLayer({
@@ -131,9 +130,14 @@ function App() {
         />
       </Map>
       <Status webSocket={webSocket} />
+      <InfoCard />
     </>
   );
 }
+/*
+<
+        
+*/
 
 export default App;
 // http://0.0.0.0:3000/finland/{z}/{x}/{y}
