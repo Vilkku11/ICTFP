@@ -20,16 +20,22 @@ class CSVHandler:
             os.makedirs(self.log_path);
             self.logger.info("CSV log folder has been created");
     
+    def add_column_headers(self):
+        pass
+
     def open_csv_file(self, message):
         
         try: 
+            filename_changed = False
             date = str(datetime.datetime.fromtimestamp(message.ts).strftime("%Y_%m_%d")); # parse message timestamp
             comparable_path = self.log_path+ "/" + date +"_log.csv";  # filename with full path
 
-            if self.csv_f == None or self.current_file != comparable_path: # create/change file format
+            if self.csv_f == None or self.current_file != comparable_path: # create/change file name
                 self.current_file = comparable_path;
-            
+                filename_changed = True;
+
             self.csv_f = open(self.current_file, "a+"); # create file if not present / append to file
+            if filename_changed: self.add_column_headers(); # add column headers for csv
 
             
         except Exception:

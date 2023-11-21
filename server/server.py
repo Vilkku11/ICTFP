@@ -34,13 +34,7 @@ def start_worker():
     worker = ADSBWorker();
 
 if __name__ == '__main__':
-    
-    #serve(app2, host='127.0.0.1', port=5000, clear_untrusted_proxy_headers=True);
-    server = threading.Thread(target=run_server)
+
     worker = threading.Thread(target=start_worker)
-    server.start();
     worker.start();
-
-
-
-    
+    serve(app2, host='127.0.0.1', port=5000, clear_untrusted_proxy_headers=True);

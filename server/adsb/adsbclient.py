@@ -50,9 +50,7 @@ class ADSBClient(TcpClient):
             if pms.crc(msg) != 0: #parity check failure
                 continue
             
-            self.status["last_msg_ts"] = ts; #update last received message status
-            
-            asyncio.run(self.worker.broadcast_msg(msg)); # broadcast message
+            self.status["last_msg_ts"] = str(datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S.%f')); #update last received message status
 
             adsb_message = ADSBmessage(msg, ts); # create class instance
             
@@ -87,6 +85,8 @@ class ADSBmessage:
         self.ts = None
         self.oe_flag = None
         self.callsign = None
+        self.direction = None
+        self.velocity = None
         self.msg = None
 
         self.initialize(msg, ts);
@@ -95,29 +95,32 @@ class ADSBmessage:
         dateformat = '%Y-%m-%d %H:%M:%S.%f';
         csv_str = "";
 
-        if self.ts != None: csv_str += f"{str(datetime.datetime.fromtimestamp(self.ts).strftime(dateformat))}, ";
-        else: csv_str += "null, ";
+        if self.ts != None: csv_str += f"{str(datetime.datetime.fromtimestamp(self.ts).strftime(dateformat))}; ";
+        else: csv_str += "null; ";
 
-        if self.id != None: csv_str += f"{self.id}, ";
-        else: csv_str += "null, ";
+        if self.id != None: csv_str += f"{self.id}; ";
+        else: csv_str += "null; ";
 
-        if self.msg_type != None: csv_str += f"{self.msg_type}, "
-        else: csv_str += "null, ";
+        if self.msg_type != None: csv_str += f"{self.msg_type}; "
+        else: csv_str += "null; ";
 
-        if self.msg_version != None: csv_str += f"{self.msg_type}, ";
-        else: csv_str += "null, ";
+        if self.msg_version != None: csv_str += f"{self.msg_type}; ";
+        else: csv_str += "null; ";
         
-        if self.downlink_format != None: csv_str += f"{self.downlink_format}, ";
-        else: csv_str += "null, ";
+        if self.downlink_format != None: csv_str += f"{self.downlink_format}; ";
+        else: csv_str += "null; ";
 
-        if self.oe_flag != None: csv_str += f"{self.oe_flag}, ";
-        else: csv_str += "null, ";
+        if self.oe_flag != None: csv_str += f"{self.oe_flag}; ";
+        else: csv_str += "null; ";
 
-        if self.callsign != None: csv_str += f"{self.callsign}, ";
-        else: csv_str += "null, ";
+        if self.callsign != None: csv_str += f"{self.callsign}; ";
+        else: csv_str += "null; ";
+
+        if self.direction != None: csv_str += f"{self.direction}; ";
+        else: csv_str += "null; ";
         
         if self.msg != None: csv_str += f"{self.msg}; "
-        else: csv_str += "null, ";
+        else: csv_str += "null; ";
         print(csv_str);
         return csv_str+"\n";
 
@@ -149,6 +152,14 @@ class ADSBmessage:
 
         try:
             self.id = pms.adsb.icao(msg);               # fligth identifier
+        except Exception: pass;
+
+        try:
+            self.direction = pms.adsb.selected_heading(msg);
+        except Exception: pass;
+
+        try:
+            self.velocity = pms.adsb.velocity(msg);
         except Exception: pass;
 
         try:
