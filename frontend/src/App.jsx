@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IconLayer, TextLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 import {
@@ -116,6 +116,7 @@ function App() {
           width: "100%",
         }}
         mapStyle="style.json"
+        RTLTextPlugin={null}
       >
         <NavigationControl position="top-right" />
         <FullscreenControl position="top-right" />
