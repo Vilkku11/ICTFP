@@ -1,10 +1,12 @@
 import asyncio
 import threading
-from datetime import datetime
 import json
 import uuid
 import time
 import os
+import pyModeS as pms
+from vincenty import vincenty
+from datetime import datetime
 from adsb.adsbclient import ADSBClient
 from adsb.websocket import WebSocketServer
 from adsb.csvHandler import CSVHandler
@@ -22,7 +24,7 @@ class ADSBWorker:
         self.virtual_points = [];
         
         self.create_websocket("0.0.0.0", 8765);
-        self.connect_adsb_client("169.254.185.49", 10002);
+        self.connect_adsb_client("169.254.9.201", 10002);
         self.start_polling();
         self.create_csv_handler();
         
@@ -94,10 +96,11 @@ class ADSBWorker:
         if not found: # no previous matches - Create new instace 
             new_plane = Plane(msg_class);
             self.planes.append(new_plane);
+            self.logger.info(f"New plane instanced: {msg_class.id}");
         
         if self.csv_handler != None: self.csv_handler.update_log(msg_class); #persist message to csv
-    
-        print(self.get_json_data());
+
+        await self.broadcast_msg(self.get_json_data()); # broadcast message
 
 
     async def handle_websocket_msg(self, msg: str):
@@ -143,7 +146,10 @@ class ADSBWorker:
             point = self.id_exist(existing_virtual_point["id"], self.virtual_points)
             if point != None:
                 self.logger.info(f"Virtual point - { point.id } - deleted");
-
+    
+    # calculate distance in WGS84 system between two coordinates to 1 mm resolution
+    async def distance_between(coordinates_a, coordinates_b):
+        return vincenty(coordinates_a, coordinates_b);
 
 
 class Plane:
@@ -164,7 +170,7 @@ class Plane:
             "even": []
         }
 
-        if msg_class: self.update(msg_class);
+        if msg_class != None: self.update(msg_class);
 
 
     def update(self, msg_data):
@@ -173,14 +179,45 @@ class Plane:
         
     
     def parse_msg_data(self, msg_data):
+        if msg_data.id != None:
+            self.id = msg_data.id;
+        
+        if msg_data.callsign != None:
+            self.flight = msg_data.callsign;
+        
+        if msg_data.direction != None:
+            self.direction = msg_data.direction;
+        
+        if msg_data.velocity != None:
+            self.velocity = msg_data.velocity;
+
         if msg_data.oe_flag == 0:
-            self.messages["even"].append(msg_data.msg);
+            self.messages["even"].append({"ts": msg_data.ts, "msg":msg_data.msg});
         
         elif msg_data.oe_flag == 1:
-            self.messages["odd"].append(msg_data.msg);
+            self.messages["odd"].append({"ts": msg_data.ts, "msg":msg_data.msg});
+    
+        self.calc_position(msg_data.oe_flag);
 
     def position(self): 
         return [self.lat, self.long];
+
+    def calc_position(self, oe_flag):
+        print("calc position")
+        try:
+            msg1 = self.messages["even"][len(self.messages)-1]["msg"];
+            msg2 = self.messages["odd"][len(self.messages)-1]["msg"];
+            ts1 = self.messages["even"][len(self.messages)-1]["ts"];
+            ts2 = self.messages["odd"][len(self.messages)-1]["ts"];
+            position = pms.adsb.position(msg1, msg2, ts1, ts2, self.lat, self.long);
+            print("adsb position: ", position);
+            if position != None:
+                print("POSITION: ", position);
+                self.lat = position[0];
+                self.long = position[1];
+        
+        except Exception:
+            pass
 
     def get_json(self):
         obj = {
@@ -202,7 +239,7 @@ class VirtualPoint:
 
         #initializes given id - otherwise creates uuid
         if isinstance(data, dict) and dict.keys(data).__contains__("id"):
-            self.id = data["id"] 
+            self.id = data["id"]; 
         else: 
             self.id = str(uuid.uuid4());
 
