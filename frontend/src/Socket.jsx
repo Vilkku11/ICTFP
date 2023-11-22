@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
-function Socket(props) {
-  const [socket, setSocket] = useState(null);
+function Socket({ setWebSocket, setPlanes, setVirtualPoints }) {
+  //const [socket, setSocket] = useState(null);
 
   //const URL = "ws://0.0.0.0:8765"; new WebSocket("ws://0.0.0.0:8765")
 
@@ -10,12 +10,15 @@ function Socket(props) {
 
     newSocket.onopen = () => {
       console.log("Websocket OPEN");
-      props.setWebSocket(true);
+      setWebSocket(true);
     };
 
     newSocket.onmessage = (event) => {
       console.log("websocket message:");
       console.log(event.data);
+      const data = JSON.parse(event.data);
+      setPlanes(...[data.planes]);
+      setVirtualPoints(...[data.virtualPoints]);
     };
 
     newSocket.onerror = (error) => {
@@ -26,10 +29,10 @@ function Socket(props) {
     newSocket.onclose = (event) => {
       console.log("Websocket closed");
       console.log(event);
-      props.setWebSocket(false);
+      setWebSocket(false);
     };
 
-    setSocket(newSocket);
+    //setSocket(newSocket);
 
     setTimeout(() => {
       newSocket = new WebSocket("ws://0.0.0.0:8765");

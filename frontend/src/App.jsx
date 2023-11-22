@@ -33,27 +33,35 @@ function App() {
     keyboard: false,
   });
 
+  // Icon and textbox size
   const [iconSize, setIconSize] = useState(50);
   const [textSize, setTextSize] = useState(15);
+  // TextBox offset in pixel coordinates
+  const [textOffset, setTextOffset] = useState([0, -30]);
 
-  //Temporary
   const [webSocket, setWebSocket] = useState(false);
+  // Infocard
+  const [isOpen, setIsOpen] = useState(false);
 
   const [testPlanes, setTestPlanes] = useState([
     { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
     { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
   ]);
 
-  const [waypoints, setWaypoints] = useState([
+  const [testPoints, setTestPoints] = useState([
     { name: "first", coordinates: [23.7609, 61.48] },
   ]);
 
-  const iconLayer = new IconLayer({
-    id: "icon-layer",
+  const [planes, setPlanes] = useState([]);
+  const [virtualPoints, setVirtualPoints] = useState([]);
+
+  const planeLayer = new IconLayer({
+    id: "plane-layer",
     data: testPlanes,
     pickable: true,
-    onHover: (info, event) => console.log("Hovered:", info.object),
-    onClick: (info, event) => console.log("Clicked:", event),
+    //onHover: (info, event) => console.log("Hovered:", info.object),
+    //onClick: (info, event) => console.log("Clicked:", info.object.name),
+    onClick: () => setIsOpen(!isOpen),
     iconAtlas: "airplane.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
@@ -68,46 +76,76 @@ function App() {
     },
   });
 
-  const textLayer = new TextLayer({
-    id: "text-layer",
+  const planeIdLayer = new TextLayer({
+    id: "plane-id-layer",
     data: testPlanes,
     pickable: true,
     background: true,
-    getPosition: (d) => [d.coordinates[0], d.coordinates[1] + 0.005],
+    getPosition: (d) => [d.coordinates[0], d.coordinates[1]],
+    getPixelOffset: textOffset,
     getText: (d) => d.name,
     getSize: (d) => textSize,
     updateTriggers: {
       getSize: textSize,
+      getTextOffset: textOffset,
     },
   });
 
+  const virtualPointLayer = new IconLayer({
+    id: "virtual-point-layer",
+    data: testPoints,
+    pickable: true,
+    iconAtlas: "airplane.svg",
+    iconMapping: {
+      marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
+    },
+    getIcon: (d) => "marker",
+    getPosition: (d) => d.coordinates,
+    getSize: (d) => iconSize,
+    getColor: (d) => [Math.sqrt(d.exits), 0, 140],
+    updateTriggers: {
+      getSize: iconSize,
+    },
+  });
+
+  // Handles icon, textlayer size on different zoom levels
   const handleIconSize = (zoom) => {
-    const baseSize = 50;
-    const saturationZoom = 9;
-    const zoomMultiplier = 0.09;
-    const sizeMultiplier = zoom <= saturationZoom ? zoom * zoomMultiplier : 1;
-    const iconSize = baseSize * sizeMultiplier;
-    setIconSize(iconSize);
-  };
-  const handleTextSize = (zoom) => {
-    const baseSize = 15;
-    const saturationZoom = 9;
-    const zoomMultiplier = 0.09;
-    const sizeMultiplier = zoom <= saturationZoom ? zoom * zoomMultiplier : 1;
-    const textSize = baseSize * sizeMultiplier;
-    setTextSize(textSize);
+    if (zoom >= 10) {
+      setIconSize(50);
+      setTextSize(15);
+      setTextOffset([0, -30]);
+    } else if (zoom >= 9 && zoom < 10) {
+      setIconSize(40);
+      setTextSize(10);
+      setTextOffset([0, -23]);
+    } else if (zoom >= 8 && zoom < 9) {
+      setIconSize(30);
+      setTextSize(8);
+      setTextOffset([0, -15]);
+    } else if (zoom >= 7 && zoom < 8) {
+      setIconSize(20);
+      setTextSize(1);
+    } else if (zoom < 7) {
+      setIconSize(10);
+      setTextSize(0);
+    }
   };
 
   return (
     <>
-      <Socket setWebSocket={setWebSocket} />
+      <Socket
+        setWebSocket={setWebSocket}
+        setPlanes={setPlanes}
+        setVirtualPoints={setVirtualPoints}
+      />
       <Map
         initialViewState={viewState}
         onMove={(evt) => setViewState(evt.viewState)}
         onZoom={() => {
           handleIconSize(viewState.zoom);
-          handleTextSize(viewState.zoom);
         }}
+        mapStyle="style.json"
+        RTLTextPlugin={null}
         style={{
           position: "absolute",
           top: 0,
@@ -115,8 +153,6 @@ function App() {
           left: 0,
           width: "100%",
         }}
-        mapStyle="style.json"
-        RTLTextPlugin={null}
       >
         <NavigationControl position="top-right" />
         <FullscreenControl position="top-right" />
@@ -126,12 +162,12 @@ function App() {
           position="bottom-left"
         />
         <DeckGLOverlay
-          layers={[iconLayer, textLayer]}
-          getTooltip={({ object }) => object && `${object.name}` + `${object}`}
+          layers={[planeLayer, planeIdLayer, virtualPointLayer]}
+          //getTooltip={({ object }) => object && `${object.name}` + `${object}`}
         />
       </Map>
       <Status webSocket={webSocket} />
-      <InfoCard />
+      <InfoCard isOpen={isOpen} setIsOpen={setIsOpen} />
     </>
   );
 }
