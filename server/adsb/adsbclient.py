@@ -17,10 +17,8 @@ class ADSBClient(TcpClient):
         self.port = port                        #port
         self.worker = worker;                   #adsb worker
         self.client = None;                     #client runtime thread object
-        self.status = {                         #client state object
-            "connection": True,
-            "last_msg_ts": None,
-        }
+        self.last_message = None;
+        self.connection = False;                     
 
     #start adsb client subcriber on thread
     def start(self):
@@ -29,7 +27,8 @@ class ADSBClient(TcpClient):
         
         if self.client.is_alive() == False:
             self.client.start();
-            self.logger.info(f'ADS-B -Client started listening {self.host}:{self.port}')
+            self.connection = True;
+            self.logger.info(f'ADS-B -Client started listening {self.host}:{self.port}');
     
     #client esist we stop its subscription
     def stop(self):
@@ -50,10 +49,8 @@ class ADSBClient(TcpClient):
             if pms.crc(msg) != 0: #parity check failure
                 continue
             
-            self.status["last_msg_ts"] = str(datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S.%f')); #update last received message status
-
+            self.last_message = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S.%f'); #update last received message status
             adsb_message = ADSBmessage(msg, ts); # create class instance
-            
             asyncio.run(self.worker.handle_adsb_message(adsb_message)); # provide message to worker
     
     def restart_client(self):
@@ -62,14 +59,14 @@ class ADSBClient(TcpClient):
 
     def check_client(self):
         if self.client.is_alive():
-            self.status["connection"] = self.client.is_alive();
+            self.connection = self.client.is_alive();
         
         else:
-            pass
+            self.connection;
 
 
     def get_client_status(self):
-        return json.dumps({"adsb": self.status});
+        return json.dumps({"adsb": {"connection": self.connection, "last_msg_ts": self.last_message}});
         
 
 
@@ -87,41 +84,48 @@ class ADSBmessage:
         self.callsign = None
         self.direction = None
         self.velocity = None
+        self.altitude = None
+        self.lat = None
+        self.long = None
         self.msg = None
 
         self.initialize(msg, ts);
 
+    def get_csv_dictionary(self):
+        return {\
+        "timestamp": datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M:%S.%f'),
+        "epoch_timestamp": self.ts,
+        "id": self.id, 
+        "message_type": self.msg_type, 
+        "adsb_version": self.msg_version, 
+        "downlink_format": self.downlink_format, 
+        "odd/even_flag": self.oe_flag, 
+        "callsign": self.callsign,
+        "direction": self.direction,
+        "altitude": self.altitude,
+        "latitude": self.lat,
+        "longitude": self.long,
+        "message": self.msg
+        }
+
+    def get_csv_headers(self):
+        return self.get_csv_dictionary.keys();
+
+    def get_csv_values(self):
+        return self.get_csv_dictionary.values();
+
     def get_csv(self):
-        dateformat = '%Y-%m-%d %H:%M:%S.%f';
+        data = self.get_csv_values();
+
         csv_str = "";
 
-        if self.ts != None: csv_str += f"{str(datetime.datetime.fromtimestamp(self.ts).strftime(dateformat))}; ";
-        else: csv_str += "null; ";
-
-        if self.id != None: csv_str += f"{self.id}; ";
-        else: csv_str += "null; ";
-
-        if self.msg_type != None: csv_str += f"{self.msg_type}; "
-        else: csv_str += "null; ";
-
-        if self.msg_version != None: csv_str += f"{self.msg_type}; ";
+        if self.ts != None: csv_str += f"{str()}; ";
         else: csv_str += "null; ";
         
-        if self.downlink_format != None: csv_str += f"{self.downlink_format}; ";
-        else: csv_str += "null; ";
-
-        if self.oe_flag != None: csv_str += f"{self.oe_flag}; ";
-        else: csv_str += "null; ";
-
-        if self.callsign != None: csv_str += f"{self.callsign}; ";
-        else: csv_str += "null; ";
-
-        if self.direction != None: csv_str += f"{self.direction}; ";
-        else: csv_str += "null; ";
+        for attribute in data:
+            if attribute != None: csv_str += f"{attribute}; ";
+            else: csv_str += "null; ";
         
-        if self.msg != None: csv_str += f"{self.msg}; "
-        else: csv_str += "null; ";
-        print(csv_str);
         return csv_str+"\n";
 
     def initialize(self, msg, ts):
@@ -163,8 +167,17 @@ class ADSBmessage:
         except Exception: pass;
 
         try:
+            self.altitude = pms.adsb.altitude(msg);
+        except Exception: pass;
+
+        try:
             self.callsign = pms.adsb.callsign(msg);     # callsign
         except Exception: pass;
+    
+    def set_position(self, latitude, longitude):
+        self.lat = latitude;
+        self.long = longitude;
+
 
 if __name__ == "__main__":
     client = ADSBClient("169.254.32.4", 10002);
