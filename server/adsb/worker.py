@@ -1,4 +1,5 @@
 import asyncio
+import socket
 import threading
 import json
 import uuid
@@ -23,8 +24,9 @@ class ADSBWorker:
         self.planes = [];
         self.virtual_points = [];
         
-        self.create_websocket("0.0.0.0", 8765);
-        self.connect_adsb_client("169.254.9.201", 10002);
+        ip = socket.gethostbyname(socket.gethostname());
+        self.create_websocket(ip, 8765);
+        self.connect_adsb_client("radarcape", 10002);
         self.start_polling();
         self.create_csv_handler();
         
@@ -52,7 +54,7 @@ class ADSBWorker:
         while self.websocket.server == None or self.websocket.server.is_serving() == False or self.adsb_client == None or self.adsb_client.client.is_alive() == False:
             time.sleep(1);
 
-        self.poller = threading.Thread(target=asyncio.run , args=[self.websocket.poll(self.adsb_client.get_client_status(), 60)]);
+        self.poller = threading.Thread(target=asyncio.run , args=[self.websocket.poll(self.adsb_client.get_client_status, 60)]);
         self.poller.start();
         self.logger.info("Status polling started");
     
@@ -64,21 +66,29 @@ class ADSBWorker:
         csv_handler_client.start();
 
     def get_json_data(self): # parse and return current planes and virtual points as json
-        data = "{ "
+        data = '{ '
         
-        data += " planes: [ "
+        data += ' "planes": [ '
+
         for plane in self.planes:
-            data += plane.get_json()
-            data += ", "
-        data += " ], "
+            data += plane.get_json(); #json plane data
 
-        data += " virtual_points: [ "
+            if plane != self.planes[len(self.planes)-1]: #if not last iterable
+                data += ', '
+
+        data += ' ], '
+
+        data += ' "virtual_points": [ '
+
         for virtual_point in self.virtual_points:
-            data += virtual_point.get_json()
-            data += ", "
-        data += " ], "
+            data += virtual_point.get_json();
 
-        data += " }"
+            if virtual_point != self.virtual_points[len(self.virtual_points)-1]: #if not last iterable
+                 data += ', '
+        
+        data += ' ] '
+
+        data += '}'
         return data;
 
     async def broadcast_msg(self, msg): # sen message to all clients
@@ -163,8 +173,6 @@ class Plane:
         self.long = 0.0;
         self.lat = 0.0;
         self.active = True;
-        self.distances = {};
-        self.angles = {};
         self.messages = {
             "odd": [],
             "even": []
@@ -191,31 +199,38 @@ class Plane:
         if msg_data.velocity != None:
             self.velocity = msg_data.velocity;
 
+        if msg_data.altitude != None:
+            self.alt = msg_data.altitude;
+
         if msg_data.oe_flag == 0:
             self.messages["even"].append({"ts": msg_data.ts, "msg":msg_data.msg});
         
         elif msg_data.oe_flag == 1:
             self.messages["odd"].append({"ts": msg_data.ts, "msg":msg_data.msg});
     
-        self.calc_position(msg_data.oe_flag);
+        self.calc_position(msg_data);
 
     def position(self): 
         return [self.lat, self.long];
 
-    def calc_position(self, oe_flag):
-        print("calc position")
+    def calc_position(self, msg_class):
         try:
-            msg1 = self.messages["even"][len(self.messages)-1]["msg"];
-            msg2 = self.messages["odd"][len(self.messages)-1]["msg"];
-            ts1 = self.messages["even"][len(self.messages)-1]["ts"];
-            ts2 = self.messages["odd"][len(self.messages)-1]["ts"];
-            position = pms.adsb.position(msg1, msg2, ts1, ts2, self.lat, self.long);
-            print("adsb position: ", position);
+            position = None;
+            msg1 = self.messages["even"][len(self.messages["even"])-1]["msg"];
+            msg2 = self.messages["odd"][len(self.messages["odd"])-1]["msg"];
+            ts1 = self.messages["even"][len(self.messages["even"])-1]["ts"];
+            ts2 = self.messages["odd"][len(self.messages["odd"])-1]["ts"];
+
+            try:
+                position = pms.adsb.position(msg1, msg2, ts1, ts2, self.lat, self.long);
+            except Exception:
+                pass
+
             if position != None:
-                print("POSITION: ", position);
                 self.lat = position[0];
                 self.long = position[1];
-        
+                msg_class.set_position(position[0],position[1]);
+
         except Exception:
             pass
 
@@ -225,9 +240,7 @@ class Plane:
         "flight": self.flight,
         "velocity": self.velocity,
         "coordinates": self.position(),
-        "altitude": self.alt,
-        "distances": self.distances,
-        "angles": self.angles,
+        "altitude": self.alt
         }
         return json.dumps(obj);
     

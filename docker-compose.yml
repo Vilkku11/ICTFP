@@ -1,0 +1,30 @@
+version: '3'
+services:
+  server:
+    build: .
+    ports: ["5000:5000", "8765:8765"]
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python3 server/server.py
+    networks:
+      - adsb-network
+    restart: unless-stopped
+
+  client: 
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python3 server/adsb/websocketClient.py
+    networks:
+      - adsb-network
+    depends_on:
+      - server
+    restart: unless-stopped
+
+networks:
+  adsb-network:
+    driver: bridge

@@ -44,9 +44,9 @@ class WebSocketServer:
             self.clients.remove(websocket) # remove from set
 
     # polling
-    async def poll(self, message, time):
+    async def poll(self, status_function, time):
         while True:
-            await self.broadcast(message)
+            await self.broadcast(status_function())
             await asyncio.sleep(time)
 
     # Send a message to all connected clients
