@@ -40,14 +40,13 @@ class CSVHandler:
             dtime = datetime.datetime.fromtimestamp(message.ts);        
             dateformat = dtime.strftime("%Y_%m_%d");                          # parse message timestamp
             comparable_file = self.log_path + "/" + dateformat +"_log.csv";   # omparable filename with full path
-
-            if self.csv_f == None or self.current_file != comparable_file:  # create/change file name
+            if self.csv_f == None and self.current_file != comparable_file:  # create/change file name
                 self.update_folder_path();
                 self.current_file = self.log_path + "/" + dateformat + "_log.csv";
                 filename_changed = True;
 
             self.csv_f = open(self.current_file, "a+"); # create file if not present / append to file
-            if filename_changed: self.add_column_headers(message); # add column headers for csv
+            if filename_changed == True: self.add_column_headers(message); # add column headers for csv
             
         except Exception:
             self.logger.error(f"Error on opening file: {self.current_file}");
