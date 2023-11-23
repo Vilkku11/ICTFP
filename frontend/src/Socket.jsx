@@ -1,24 +1,27 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-function Socket({ setWebSocket, setPlanes, setVirtualPoints }) {
-  //const [socket, setSocket] = useState(null);
+function Socket(props) {
+  const [socket, setSocket] = useState(null);
 
   //const URL = "ws://0.0.0.0:8765"; new WebSocket("ws://0.0.0.0:8765")
 
   useEffect(() => {
-    let newSocket = new WebSocket("ws://0.0.0.0:8765");
+    let newSocket = new WebSocket("ws://127.0.1.1:8765");
 
     newSocket.onopen = () => {
       console.log("Websocket OPEN");
-      setWebSocket(true);
+      props.setWebSocket(true);
     };
 
     newSocket.onmessage = (event) => {
       console.log("websocket message:");
-      console.log(event.data);
-      const data = JSON.parse(event.data);
-      setPlanes(...[data.planes]);
-      setVirtualPoints(...[data.virtualPoints]);
+      const parsedMsg = JSON.parse(event.data);
+      console.log(parsedMsg.planes);
+      // Check message type.
+      props.setPlanes(...[parsedMsg.planes]);
+      props.setVirtualPoints(...[parsedMsg.virtual_points]);
+      
+      
     };
 
     newSocket.onerror = (error) => {
@@ -29,13 +32,13 @@ function Socket({ setWebSocket, setPlanes, setVirtualPoints }) {
     newSocket.onclose = (event) => {
       console.log("Websocket closed");
       console.log(event);
-      setWebSocket(false);
+      props.setWebSocket(false);
     };
 
-    //setSocket(newSocket);
+    setSocket(newSocket);
 
     setTimeout(() => {
-      newSocket = new WebSocket("ws://0.0.0.0:8765");
+      newSocket = new WebSocket("ws://127.0.1.1:8765");
     }, 5000);
 
     return () => {
