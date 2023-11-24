@@ -42,14 +42,10 @@ function App() {
   const [webSocket, setWebSocket] = useState(false);
   // Infocard
   const [isOpen, setIsOpen] = useState(false);
-
-  const [testPlanes, setTestPlanes] = useState([
-    { name: "test", coordinates: [23.7609, 61.48], angle: 100 },
-    { name: "receiver", coordinates: [23.76, 61.46], angle: 10 },
-  ]);
-
+  const testData = {  "planes": [ {"id": "461E1C", "flight": "FIN4MW__", "velocity": [423, 1.8956222586147526, 640, "GS"], "coordinates": [67.61805725097656, 31.711287064985793], "altitude": 36775}, {"id": "4601FD", "flight": "FIN9VM__", "velocity": [259, 331.65430637692333, 0, "GS"], "coordinates": [61.24530029296875, 23.863481794084823], "altitude": 20025}, {"id": "AC062A", "flight": null, "velocity": 0.0, "coordinates": [0.0, 0.0], "altitude": -1} ],  "virtual_points": [  ] }
+  const [testPlanes, setTestPlanes] = useState(testData.planes);
   const [testPoints, setTestPoints] = useState([
-    { name: "first", coordinates: [23.7609, 61.48] },
+    { name: "first", coordinates: [23.7609, 23.7609] },
   ]);
 
   const [planes, setPlanes] = useState([]);
@@ -57,18 +53,18 @@ function App() {
 
   const planeLayer = new IconLayer({
     id: "plane-layer",
-    data: testPlanes,
+    data: planes,
     pickable: true,
     //onHover: (info, event) => console.log("Hovered:", info.object),
     //onClick: (info, event) => console.log("Clicked:", info.object.name),
-    onClick: () => setIsOpen(!isOpen),
+    onClick: (d) => {setIsOpen(!isOpen); console.log(isOpen)},
     iconAtlas: "airplane.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
     },
     getIcon: (d) => "marker",
-    getPosition: (d) => d.coordinates,
-    getAngle: (d) => d.angle,
+    getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
+    getAngle: (d) => d.velocity[2],
     getSize: (d) => iconSize,
     getColor: (d) => [Math.sqrt(d.exits), 140, 0],
     updateTriggers: {
@@ -76,14 +72,15 @@ function App() {
     },
   });
 
+
   const planeIdLayer = new TextLayer({
     id: "plane-id-layer",
-    data: testPlanes,
+    data: planes,
     pickable: true,
     background: true,
-    getPosition: (d) => [d.coordinates[0], d.coordinates[1]],
+    getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
     getPixelOffset: textOffset,
-    getText: (d) => d.name,
+    getText: (d) => d.id,
     getSize: (d) => textSize,
     updateTriggers: {
       getSize: textSize,
@@ -100,9 +97,30 @@ function App() {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
     },
     getIcon: (d) => "marker",
-    getPosition: (d) => d.coordinates,
+    getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
     getSize: (d) => iconSize,
     getColor: (d) => [Math.sqrt(d.exits), 0, 140],
+    updateTriggers: {
+      getSize: iconSize,
+    },
+  });
+
+  const testLayer = new IconLayer({
+    id: "testlayer",
+    data: testPlanes,
+    pickable: true,
+    onHover: (info, event) => console.log("Hovered:", info.object),
+    //onClick: (info, event) => console.log("Clicked:", info.object.name),
+    onClick: (d) => testbutton(),
+    iconAtlas: "airplane.svg",
+    iconMapping: {
+      marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
+    },
+    getIcon: (d) => "marker",
+    getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
+    //getAngle: (d) => d.angle,
+    getSize: (d) => iconSize,
+    getColor: (d) => [Math.sqrt(d.exits), 140, 0],
     updateTriggers: {
       getSize: iconSize,
     },
@@ -130,13 +148,19 @@ function App() {
       setTextSize(0);
     }
   };
+  const testbutton = () =>{
+    
+    setTestPlanes(testPlanes[0].coordinates)
+  }
 
   return (
     <>
       <Socket
         setWebSocket={setWebSocket}
         setPlanes={setPlanes}
+        planes={planes}
         setVirtualPoints={setVirtualPoints}
+        virtualPoints={virtualPoints}
       />
       <Map
         initialViewState={viewState}
@@ -162,7 +186,7 @@ function App() {
           position="bottom-left"
         />
         <DeckGLOverlay
-          layers={[planeLayer, planeIdLayer, virtualPointLayer]}
+          layers={[planeLayer, planeIdLayer, virtualPointLayer, testLayer]}
           //getTooltip={({ object }) => object && `${object.name}` + `${object}`}
         />
       </Map>

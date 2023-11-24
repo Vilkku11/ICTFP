@@ -38,8 +38,8 @@ class WebSocketClient:
 
 if __name__ == "__main__":
     # WebSocket server host and port
-    host = "0.0.0.0"  # Listen on all available network interfaces
-    port = 8765  # Replace with your desired port
+    host = "server"  # Websocket server
+    port = 8765  # port
     server_uri = f"ws://{host}:{port}"
 
 
