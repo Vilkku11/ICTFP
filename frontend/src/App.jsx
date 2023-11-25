@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { IconLayer, TextLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 import {
   Map,
   ScaleControl,
-  FullscreenControl,
   NavigationControl,
   useControl,
   AttributionControl,
@@ -41,8 +40,33 @@ function App() {
 
   const [webSocket, setWebSocket] = useState(false);
   // Infocard
-  const [isOpen, setIsOpen] = useState(false);
-  const testData = {  "planes": [ {"id": "461E1C", "flight": "FIN4MW__", "velocity": [423, 1.8956222586147526, 640, "GS"], "coordinates": [67.61805725097656, 31.711287064985793], "altitude": 36775}, {"id": "4601FD", "flight": "FIN9VM__", "velocity": [259, 331.65430637692333, 0, "GS"], "coordinates": [61.24530029296875, 23.863481794084823], "altitude": 20025}, {"id": "AC062A", "flight": null, "velocity": 0.0, "coordinates": [0.0, 0.0], "altitude": -1} ],  "virtual_points": [  ] }
+  const [planeInfo, setPlaneInfo] = useState({});
+  const testData = {
+    planes: [
+      {
+        id: "461E1C",
+        flight: "FIN4MW__",
+        velocity: [423, 1.8956222586147526, 640, "GS"],
+        coordinates: [67.61805725097656, 31.711287064985793],
+        altitude: 36775,
+      },
+      {
+        id: "4601FD",
+        flight: "FIN9VM__",
+        velocity: [259, 331.65430637692333, 0, "GS"],
+        coordinates: [61.24530029296875, 23.863481794084823],
+        altitude: 20025,
+      },
+      {
+        id: "AC062A",
+        flight: null,
+        velocity: 0.0,
+        coordinates: [0.0, 0.0],
+        altitude: -1,
+      },
+    ],
+    virtual_points: [],
+  };
   const [testPlanes, setTestPlanes] = useState(testData.planes);
   const [testPoints, setTestPoints] = useState([
     { name: "first", coordinates: [23.7609, 23.7609] },
@@ -57,7 +81,10 @@ function App() {
     pickable: true,
     //onHover: (info, event) => console.log("Hovered:", info.object),
     //onClick: (info, event) => console.log("Clicked:", info.object.name),
-    onClick: (d) => {setIsOpen(!isOpen); console.log(isOpen)},
+    onClick: (d) => {
+      setIsOpen(!isOpen);
+      console.log(isOpen);
+    },
     iconAtlas: "airplane.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
@@ -71,7 +98,6 @@ function App() {
       getSize: iconSize,
     },
   });
-
 
   const planeIdLayer = new TextLayer({
     id: "plane-id-layer",
@@ -109,9 +135,11 @@ function App() {
     id: "testlayer",
     data: testPlanes,
     pickable: true,
-    onHover: (info, event) => console.log("Hovered:", info.object),
+    //onHover: (info, event) => console.log("Hovered:", info.object),
     //onClick: (info, event) => console.log("Clicked:", info.object.name),
-    onClick: (d) => testbutton(),
+    onClick: (info) => {
+      setPlaneInfo(info.object);
+    },
     iconAtlas: "airplane.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
@@ -148,10 +176,6 @@ function App() {
       setTextSize(0);
     }
   };
-  const testbutton = () =>{
-    
-    setTestPlanes(testPlanes[0].coordinates)
-  }
 
   return (
     <>
@@ -178,8 +202,7 @@ function App() {
           width: "100%",
         }}
       >
-        <NavigationControl position="top-right" />
-        <FullscreenControl position="top-right" />
+        <NavigationControl position="top-right" showCompass={false} />
         <ScaleControl position="bottom-right" />
         <AttributionControl
           customAttribution="© OpenMapTiles © OpenStreetMap contributors"
@@ -190,15 +213,18 @@ function App() {
           //getTooltip={({ object }) => object && `${object.name}` + `${object}`}
         />
       </Map>
-      <Status webSocket={webSocket} />
-      <InfoCard isOpen={isOpen} setIsOpen={setIsOpen} />
+      <StatusMemoized webSocket={webSocket} />
+      <InfoCardMemoized planeInfo={planeInfo} setPlaneInfo={setPlaneInfo} />
     </>
   );
 }
 /*
-<
-        
-*/
+      <Status webSocket={webSocket} />
+      <InfoCard planeInfo={planeInfo} />
+      */
+
+const StatusMemoized = React.memo(Status);
+const InfoCardMemoized = React.memo(InfoCard);
 
 export default App;
 // http://0.0.0.0:3000/finland/{z}/{x}/{y}

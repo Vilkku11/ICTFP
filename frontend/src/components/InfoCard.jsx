@@ -1,33 +1,36 @@
 import { useState, useRef, useEffect } from "react";
 
-const InfoCard = ({ isOpen, setIsOpen }) => {
-  const drawerRef = useRef(null);
-
-  const handleButtonClick = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const handleClickOutside = (event) => {
-    if (drawerRef.current && !drawerRef.current.contains(event.target)) {
-      setIsOpen(false);
-    }
-  };
+import "./InfoCard.css";
+const InfoCard = ({ planeInfo, setPlaneInfo }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  let cardRef = useRef();
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    console.log("adding infocard component");
+    const handleClickOutside = (event) => {
+      if (cardRef.current && !cardRef.current.contains(event.target)) {
+        console.log("CLICKED OUTSIDE");
+        setIsOpen(false);
+        setPlaneInfo(false);
+      }
+    };
+    if (Object.keys(planeInfo).length !== 0) {
+      document.addEventListener("click", handleClickOutside);
+      console.log("setIsOpen to true");
+      setIsOpen(true);
+    }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      console.log("removing infocard component");
+      document.removeEventListener("click", handleClickOutside);
     };
-  }, []);
+  }, [planeInfo]);
+
   return (
-    <div className={`side-drawer ${isOpen ? "open" : ""}`} ref={drawerRef}>
+    <div>
       {isOpen && (
         <>
-          <div className="header">
-            <span className="close-button">&times;</span>
-          </div>
-          <div className="content">
+          <div className="content" ref={cardRef}>
             <h1>testtesxt</h1>
             <p>more test text</p>
           </div>

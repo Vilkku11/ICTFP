@@ -6,7 +6,7 @@ function Socket(props) {
   //const URL = "ws://0.0.0.0:8765"; new WebSocket("ws://0.0.0.0:8765")
 
   useEffect(() => {
-    let newSocket = new WebSocket("ws://127.0.1.1:8765");
+    let newSocket = new WebSocket("ws://192.168.1.145:8765");
 
     newSocket.onopen = () => {
       console.log("Websocket OPEN");
@@ -23,8 +23,6 @@ function Socket(props) {
       // Check message type.
       props.setPlanes(...[parsedMsg.planes]);
       props.setVirtualPoints(...[parsedMsg.virtual_points]);
-      
-      
     };
 
     newSocket.onerror = (error) => {
@@ -41,7 +39,7 @@ function Socket(props) {
     setSocket(newSocket);
 
     setTimeout(() => {
-      newSocket = new WebSocket("ws://127.0.1.1:8765");
+      newSocket = new WebSocket("ws://192.168.1.145:8765");
     }, 5000);
 
     return () => {
