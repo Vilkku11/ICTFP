@@ -101,7 +101,7 @@ function App() {
 
   const planeIdLayer = new TextLayer({
     id: "plane-id-layer",
-    data: planes,
+    data: testPlanes,
     pickable: true,
     background: true,
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
@@ -156,23 +156,27 @@ function App() {
 
   // Handles icon, textlayer size on different zoom levels
   const handleIconSize = (zoom) => {
-    if (zoom >= 10) {
-      setIconSize(50);
-      setTextSize(15);
-      setTextOffset([0, -30]);
-    } else if (zoom >= 9 && zoom < 10) {
-      setIconSize(40);
-      setTextSize(10);
-      setTextOffset([0, -23]);
+    if (zoom >= 9) {
+      setIconSize(48);
+      setTextSize(14);
+      setTextOffset([0, -28]);
     } else if (zoom >= 8 && zoom < 9) {
-      setIconSize(30);
-      setTextSize(8);
-      setTextOffset([0, -15]);
+      setIconSize(45);
+      setTextSize(14);
+      setTextOffset([0, -27]);
     } else if (zoom >= 7 && zoom < 8) {
+      setIconSize(40);
+      setTextSize(12);
+      setTextOffset([0, -23]);
+    } else if (zoom >= 6 && zoom < 7) {
+      setIconSize(30);
+      setTextSize(10);
+      setTextOffset([0, -16]);
+    } else if (zoom >= 5 && zoom < 6) {
+      setIconSize(25);
+      setTextSize(0);
+    } else if (zoom < 5) {
       setIconSize(20);
-      setTextSize(1);
-    } else if (zoom < 7) {
-      setIconSize(10);
       setTextSize(0);
     }
   };
