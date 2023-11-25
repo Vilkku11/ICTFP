@@ -214,7 +214,11 @@ function App() {
         />
       </Map>
       <StatusMemoized webSocket={webSocket} />
-      <InfoCardMemoized planeInfo={planeInfo} setPlaneInfo={setPlaneInfo} />
+      <InfoCardMemoized
+        planeInfo={planeInfo}
+        setPlaneInfo={setPlaneInfo}
+        testData={testData}
+      />
     </>
   );
 }

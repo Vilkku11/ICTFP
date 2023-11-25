@@ -38,9 +38,9 @@ function Socket(props) {
 
     setSocket(newSocket);
 
-    setTimeout(() => {
+    /* setTimeout(() => {
       newSocket = new WebSocket("ws://192.168.1.145:8765");
-    }, 5000);
+    }, 5000);*/
 
     return () => {
       console.log("component unmounted, closing WebSocket");
