@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IconLayer, TextLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 import {
@@ -40,7 +40,7 @@ function App() {
 
   const [webSocket, setWebSocket] = useState(false);
   // Infocard
-  const [planeInfo, setPlaneInfo] = useState({});
+  const [iconInfo, setIconInfo] = useState({});
   const testData = {
     planes: [
       {
@@ -74,6 +74,18 @@ function App() {
 
   const [planes, setPlanes] = useState([]);
   const [virtualPoints, setVirtualPoints] = useState([]);
+
+  // TEST PLANE DATA TO SEE PERFORMANCE
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const test = [...testPlanes];
+      test[1].coordinates[0] += 0.001;
+
+      setTestPlanes(test);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [testPlanes]);
 
   const planeLayer = new IconLayer({
     id: "plane-layer",
@@ -138,7 +150,7 @@ function App() {
     //onHover: (info, event) => console.log("Hovered:", info.object),
     //onClick: (info, event) => console.log("Clicked:", info.object.name),
     onClick: (info) => {
-      setPlaneInfo(info.object);
+      setIconInfo(info.object);
     },
     iconAtlas: "airplane.svg",
     iconMapping: {
@@ -219,9 +231,9 @@ function App() {
       </Map>
       <StatusMemoized webSocket={webSocket} />
       <InfoCardMemoized
-        planeInfo={planeInfo}
-        setPlaneInfo={setPlaneInfo}
-        testData={testData}
+        iconInfo={iconInfo}
+        setIconInfo={setIconInfo}
+        testPlanes={testPlanes}
       />
     </>
   );

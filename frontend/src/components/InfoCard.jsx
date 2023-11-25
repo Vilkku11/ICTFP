@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 
+import ObjectHandler from "./ObjectHandler";
+
 import "./InfoCard.css";
-const InfoCard = ({ planeInfo, setPlaneInfo, testData }) => {
+const InfoCard = ({ iconInfo, setIconInfo, testPlanes }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
   let cardRef = useRef();
@@ -10,29 +12,28 @@ const InfoCard = ({ planeInfo, setPlaneInfo, testData }) => {
     const handleClickOutside = (event) => {
       if (cardRef.current && !cardRef.current.contains(event.target)) {
         setIsOpen(false);
-        setPlaneInfo(false);
+        setIconInfo(false);
       }
     };
-
     // Open Card only if data available
-    if (Object.keys(planeInfo).length !== 0) {
+    if (Object.keys(iconInfo).length !== 0) {
       document.addEventListener("click", handleClickOutside);
       setIsOpen(true);
+    }
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [iconInfo]);
+
+  useEffect(() => {
+    if (isOpen) {
+      console.log("isopen and going to objectHandler");
       // .planes ONLY NEEDED FOR TESTDATA
-      const obj = testData.planes.find((obj) => obj.id === planeInfo.id);
+      const obj = testPlanes.find((obj) => obj.id === iconInfo.id);
+      // const obj = planes.find((obj) => obj.id === planeInfo.id)
 
       if (obj) {
-        setContent(
-          <div>
-            <ul>
-              <li>id: {obj.id}</li>
-              <li>flight: {obj.flight}</li>
-              <li>latitude: {obj.coordinates[0]}</li>
-              <li>longitude: {obj.coordinates[1]}</li>
-              <li> altitude: {obj.altitude}</li>
-            </ul>
-          </div>
-        );
+        setContent(<ObjectHandler obj={obj} />);
       } else {
         setContent(
           <div>
@@ -41,11 +42,7 @@ const InfoCard = ({ planeInfo, setPlaneInfo, testData }) => {
         );
       }
     }
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [planeInfo]);
+  }, [iconInfo, testPlanes]);
   return (
     <div>
       {isOpen && (
