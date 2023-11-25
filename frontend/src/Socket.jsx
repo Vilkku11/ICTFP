@@ -12,10 +12,13 @@ function Socket(props) {
       console.log("Websocket OPEN");
       props.setWebSocket(true);
     };
-
+    // adsb message
+    // {"adsb": {"connection": true, "last_msg_ts": "2023-11-24 13:29:33.362208"}}
     newSocket.onmessage = (event) => {
       console.log("websocket message:");
       const parsedMsg = JSON.parse(event.data);
+      console.log(event.data);
+      console.log(parsedMsg);
       console.log(parsedMsg.planes);
       // Check message type.
       props.setPlanes(...[parsedMsg.planes]);
