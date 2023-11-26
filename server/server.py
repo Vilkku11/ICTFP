@@ -1,9 +1,10 @@
 import os
 import threading
 import logging 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 from waitress import serve
+import socket
 
 from adsb.worker import ADSBWorker
 
@@ -20,6 +21,13 @@ def server(path):
     if path!= "" and os.path.exists(app2.static_folder + '/' + path):
         return send_from_directory(app2.static_folder, path)
     
+@app2.route('/getip', methods=['GET'])
+def get_ip():
+    ip = socket.gethostbyname(socket.gethostname())
+    return jsonify({'ip': ip})
+    
+
+
 @app2.route('/frontend', defaults={'path': ''})
 @app2.route('/<path:path>')
 def frontend(path):

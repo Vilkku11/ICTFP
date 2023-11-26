@@ -2,51 +2,70 @@ import { useEffect, useState } from "react";
 
 function Socket(props) {
   const [socket, setSocket] = useState(null);
+  const [url, setUrl] = useState("");
 
-  //const URL = "ws://0.0.0.0:8765"; new WebSocket("ws://0.0.0.0:8765")
+  const fetchWebSocketIp = async () => {
+    const response = await fetch("http://0.0.0.0:5000/getip");
+    const data = await response.json();
+    console.log(data);
+    const url = "ws://" + data.ip + ":8765";
+    console.log(url);
+    setUrl(url);
+  };
 
   useEffect(() => {
-    let newSocket = new WebSocket("ws://192.168.1.145:8765");
+    if (!url) {
+      fetchWebSocketIp();
+    }
+  }, [url]);
 
-    newSocket.onopen = () => {
-      console.log("Websocket OPEN");
-      props.setWebSocket(true);
-    };
-    // adsb message
-    // {"adsb": {"connection": true, "last_msg_ts": "2023-11-24 13:29:33.362208"}}
-    newSocket.onmessage = (event) => {
-      console.log("websocket message:");
-      const parsedMsg = JSON.parse(event.data);
-      console.log(event.data);
-      console.log(parsedMsg);
-      console.log(parsedMsg.planes);
-      // Check message type.
-      props.setPlanes(...[parsedMsg.planes]);
-      props.setVirtualPoints(...[parsedMsg.virtual_points]);
-    };
+  useEffect(() => {
+    let newSocket = "";
+    if (url) {
+      newSocket = new WebSocket(url);
 
-    newSocket.onerror = (error) => {
-      console.log("error:");
-      console.log(error);
-    };
+      newSocket.onopen = () => {
+        console.log("Websocket OPEN");
+        props.setWebSocket(true);
+      };
+      // adsb message
+      // {"adsb": {"connection": true, "last_msg_ts": "2023-11-24 13:29:33.362208"}}
+      newSocket.onmessage = (event) => {
+        console.log("websocket message:");
+        const parsedMsg = JSON.parse(event.data);
+        console.log(event.data);
+        console.log(parsedMsg);
+        console.log(parsedMsg.planes);
+        // Check message type.
+        props.setPlanes(...[parsedMsg.planes]);
+        props.setVirtualPoints(...[parsedMsg.virtual_points]);
+      };
 
-    newSocket.onclose = (event) => {
-      console.log("Websocket closed");
-      console.log(event);
-      props.setWebSocket(false);
-    };
+      newSocket.onerror = (error) => {
+        console.log("error:");
+        console.log(error);
+      };
 
-    setSocket(newSocket);
+      newSocket.onclose = (event) => {
+        console.log("Websocket closed");
+        console.log(event);
+        props.setWebSocket(false);
+      };
 
-    /* setTimeout(() => {
+      setSocket(newSocket);
+
+      /* setTimeout(() => {
       newSocket = new WebSocket("ws://192.168.1.145:8765");
     }, 5000);*/
-
+    }
     return () => {
       console.log("component unmounted, closing WebSocket");
-      newSocket.close();
+
+      if (newSocket) {
+        newSocket.close();
+      }
     };
-  }, []);
+  }, [url]);
 
   return null;
 }

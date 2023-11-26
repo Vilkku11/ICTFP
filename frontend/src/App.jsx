@@ -69,11 +69,15 @@ function App() {
   };
   const [testPlanes, setTestPlanes] = useState(testData.planes);
   const [testPoints, setTestPoints] = useState([
-    { name: "first", coordinates: [23.7609, 23.7609] },
+    { name: "first", coordinates: [61.29, 23.47] },
+    { name: "second", coordinates: [61.2, 23.5] },
   ]);
 
   const [planes, setPlanes] = useState([]);
   const [virtualPoints, setVirtualPoints] = useState([]);
+  const [receiverPoint, setReceiverPoint] = useState([
+    { name: "receiver", coordinates: [61.3, 23.8] },
+  ]);
 
   // TEST PLANE DATA TO SEE PERFORMANCE
   useEffect(() => {
@@ -126,18 +130,35 @@ function App() {
     },
   });
 
-  const virtualPointLayer = new IconLayer({
-    id: "virtual-point-layer",
-    data: testPoints,
+  const receiverLayer = new IconLayer({
+    id: "receiver-point",
+    data: receiverPoint,
     pickable: true,
-    iconAtlas: "airplane.svg",
+    iconAtlas: "receiver.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
     },
     getIcon: (d) => "marker",
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
     getSize: (d) => iconSize,
-    getColor: (d) => [Math.sqrt(d.exits), 0, 140],
+    getColor: (d) => [0, 0, 0],
+    updateTriggers: {
+      getSize: iconSize,
+    },
+  });
+
+  const virtualPointLayer = new IconLayer({
+    id: "virtual-point-layer",
+    data: testPoints,
+    pickable: true,
+    iconAtlas: "virtualPoint.svg",
+    iconMapping: {
+      marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
+    },
+    getIcon: (d) => "marker",
+    getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
+    getSize: (d) => iconSize,
+    getColor: (d) => [0, 0, 0],
     updateTriggers: {
       getSize: iconSize,
     },
@@ -225,8 +246,13 @@ function App() {
           position="bottom-left"
         />
         <DeckGLOverlay
-          layers={[planeLayer, planeIdLayer, virtualPointLayer, testLayer]}
-          //getTooltip={({ object }) => object && `${object.name}` + `${object}`}
+          layers={[
+            planeLayer,
+            planeIdLayer,
+            virtualPointLayer,
+            testLayer,
+            receiverLayer,
+          ]}
         />
       </Map>
       <StatusMemoized webSocket={webSocket} />

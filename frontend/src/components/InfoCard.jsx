@@ -48,7 +48,6 @@ const InfoCard = ({ iconInfo, setIconInfo, testPlanes }) => {
       {isOpen && (
         <>
           <div className="content" ref={cardRef}>
-            <h1>tesr</h1>
             {content}
           </div>
         </>
