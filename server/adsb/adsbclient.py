@@ -3,6 +3,7 @@ import asyncio
 import threading
 import json
 import datetime
+import time 
 from adsb.logger import Logger
 from pyModeS.extra.tcpclient import TcpClient
 
@@ -18,7 +19,7 @@ class ADSBClient(TcpClient):
         self.worker = worker;                   #adsb worker
         self.client = None;                     #client runtime thread object
         self.last_message = None;
-        self.connection = False;                     
+        self.connection = False;
 
     #start adsb client subcriber on thread
     def start(self):
@@ -109,18 +110,15 @@ class ADSBmessage:
         }
 
     def get_csv_headers(self):
-        return self.get_csv_dictionary.keys();
+        return self.get_csv_dictionary();
 
     def get_csv_values(self):
-        return self.get_csv_dictionary.values();
+        return self.get_csv_dictionary().values();
 
     def get_csv(self):
         data = self.get_csv_values();
 
         csv_str = "";
-
-        if self.ts != None: csv_str += f"{str()}; ";
-        else: csv_str += "null; ";
         
         for attribute in data:
             if attribute != None: csv_str += f"{attribute}; ";
