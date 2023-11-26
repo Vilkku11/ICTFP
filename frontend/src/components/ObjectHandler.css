@@ -1,0 +1,24 @@
+.list-container {
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.list-items {
+  list-style-type: none;
+  padding: 0;
+  width: 45%; /* Adjust as needed */
+}
+
+.list-items li {
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.list-items li strong {
+  margin-right: 5px;
+}

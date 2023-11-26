@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { IconLayer, TextLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox/typed";
 import {
   Map,
   ScaleControl,
-  FullscreenControl,
   NavigationControl,
   useControl,
   AttributionControl,
@@ -41,15 +40,56 @@ function App() {
 
   const [webSocket, setWebSocket] = useState(false);
   // Infocard
-  const [isOpen, setIsOpen] = useState(false);
-  const testData = {  "planes": [ {"id": "461E1C", "flight": "FIN4MW__", "velocity": [423, 1.8956222586147526, 640, "GS"], "coordinates": [67.61805725097656, 31.711287064985793], "altitude": 36775}, {"id": "4601FD", "flight": "FIN9VM__", "velocity": [259, 331.65430637692333, 0, "GS"], "coordinates": [61.24530029296875, 23.863481794084823], "altitude": 20025}, {"id": "AC062A", "flight": null, "velocity": 0.0, "coordinates": [0.0, 0.0], "altitude": -1} ],  "virtual_points": [  ] }
+  const [iconInfo, setIconInfo] = useState({});
+  const testData = {
+    planes: [
+      {
+        id: "461E1C",
+        flight: "FIN4MW__",
+        velocity: [423, 1.8956222586147526, 640, "GS"],
+        coordinates: [67.61805725097656, 31.711287064985793],
+        altitude: 36775,
+      },
+      {
+        id: "4601FD",
+        flight: "FIN9VM__",
+        velocity: [259, 331.65430637692333, 0, "GS"],
+        coordinates: [61.24530029296875, 23.863481794084823],
+        altitude: 20025,
+      },
+      {
+        id: "AC062A",
+        flight: null,
+        velocity: 0.0,
+        coordinates: [0.0, 0.0],
+        altitude: -1,
+      },
+    ],
+    virtual_points: [],
+  };
   const [testPlanes, setTestPlanes] = useState(testData.planes);
   const [testPoints, setTestPoints] = useState([
-    { name: "first", coordinates: [23.7609, 23.7609] },
+    { name: "first", coordinates: [61.29, 23.47] },
+    { name: "second", coordinates: [61.2, 23.5] },
   ]);
 
   const [planes, setPlanes] = useState([]);
   const [virtualPoints, setVirtualPoints] = useState([]);
+  const [receiverPoint, setReceiverPoint] = useState([
+    { name: "receiver", coordinates: [61.3, 23.8] },
+  ]);
+
+  // TEST PLANE DATA TO SEE PERFORMANCE
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const test = [...testPlanes];
+      test[1].coordinates[0] += 0.001;
+
+      setTestPlanes(test);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [testPlanes]);
 
   const planeLayer = new IconLayer({
     id: "plane-layer",
@@ -57,7 +97,10 @@ function App() {
     pickable: true,
     //onHover: (info, event) => console.log("Hovered:", info.object),
     //onClick: (info, event) => console.log("Clicked:", info.object.name),
-    onClick: (d) => {setIsOpen(!isOpen); console.log(isOpen)},
+    onClick: (d) => {
+      setIsOpen(!isOpen);
+      console.log(isOpen);
+    },
     iconAtlas: "airplane.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
@@ -72,10 +115,9 @@ function App() {
     },
   });
 
-
   const planeIdLayer = new TextLayer({
     id: "plane-id-layer",
-    data: planes,
+    data: testPlanes,
     pickable: true,
     background: true,
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
@@ -88,18 +130,35 @@ function App() {
     },
   });
 
-  const virtualPointLayer = new IconLayer({
-    id: "virtual-point-layer",
-    data: testPoints,
+  const receiverLayer = new IconLayer({
+    id: "receiver-point",
+    data: receiverPoint,
     pickable: true,
-    iconAtlas: "airplane.svg",
+    iconAtlas: "receiver.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
     },
     getIcon: (d) => "marker",
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
     getSize: (d) => iconSize,
-    getColor: (d) => [Math.sqrt(d.exits), 0, 140],
+    getColor: (d) => [0, 0, 0],
+    updateTriggers: {
+      getSize: iconSize,
+    },
+  });
+
+  const virtualPointLayer = new IconLayer({
+    id: "virtual-point-layer",
+    data: testPoints,
+    pickable: true,
+    iconAtlas: "virtualPoint.svg",
+    iconMapping: {
+      marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
+    },
+    getIcon: (d) => "marker",
+    getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
+    getSize: (d) => iconSize,
+    getColor: (d) => [0, 0, 0],
     updateTriggers: {
       getSize: iconSize,
     },
@@ -109,9 +168,11 @@ function App() {
     id: "testlayer",
     data: testPlanes,
     pickable: true,
-    onHover: (info, event) => console.log("Hovered:", info.object),
+    //onHover: (info, event) => console.log("Hovered:", info.object),
     //onClick: (info, event) => console.log("Clicked:", info.object.name),
-    onClick: (d) => testbutton(),
+    onClick: (info) => {
+      setIconInfo(info.object);
+    },
     iconAtlas: "airplane.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
@@ -128,30 +189,30 @@ function App() {
 
   // Handles icon, textlayer size on different zoom levels
   const handleIconSize = (zoom) => {
-    if (zoom >= 10) {
-      setIconSize(50);
-      setTextSize(15);
-      setTextOffset([0, -30]);
-    } else if (zoom >= 9 && zoom < 10) {
-      setIconSize(40);
-      setTextSize(10);
-      setTextOffset([0, -23]);
+    if (zoom >= 9) {
+      setIconSize(48);
+      setTextSize(14);
+      setTextOffset([0, -28]);
     } else if (zoom >= 8 && zoom < 9) {
-      setIconSize(30);
-      setTextSize(8);
-      setTextOffset([0, -15]);
+      setIconSize(45);
+      setTextSize(14);
+      setTextOffset([0, -27]);
     } else if (zoom >= 7 && zoom < 8) {
+      setIconSize(40);
+      setTextSize(12);
+      setTextOffset([0, -23]);
+    } else if (zoom >= 6 && zoom < 7) {
+      setIconSize(30);
+      setTextSize(10);
+      setTextOffset([0, -16]);
+    } else if (zoom >= 5 && zoom < 6) {
+      setIconSize(25);
+      setTextSize(0);
+    } else if (zoom < 5) {
       setIconSize(20);
-      setTextSize(1);
-    } else if (zoom < 7) {
-      setIconSize(10);
       setTextSize(0);
     }
   };
-  const testbutton = () =>{
-    
-    setTestPlanes(testPlanes[0].coordinates)
-  }
 
   return (
     <>
@@ -178,27 +239,38 @@ function App() {
           width: "100%",
         }}
       >
-        <NavigationControl position="top-right" />
-        <FullscreenControl position="top-right" />
+        <NavigationControl position="top-right" showCompass={false} />
         <ScaleControl position="bottom-right" />
         <AttributionControl
           customAttribution="© OpenMapTiles © OpenStreetMap contributors"
           position="bottom-left"
         />
         <DeckGLOverlay
-          layers={[planeLayer, planeIdLayer, virtualPointLayer, testLayer]}
-          //getTooltip={({ object }) => object && `${object.name}` + `${object}`}
+          layers={[
+            planeLayer,
+            planeIdLayer,
+            virtualPointLayer,
+            testLayer,
+            receiverLayer,
+          ]}
         />
       </Map>
-      <Status webSocket={webSocket} />
-      <InfoCard isOpen={isOpen} setIsOpen={setIsOpen} />
+      <StatusMemoized webSocket={webSocket} />
+      <InfoCardMemoized
+        iconInfo={iconInfo}
+        setIconInfo={setIconInfo}
+        testPlanes={testPlanes}
+      />
     </>
   );
 }
 /*
-<
-        
-*/
+      <Status webSocket={webSocket} />
+      <InfoCard planeInfo={planeInfo} />
+      */
+
+const StatusMemoized = React.memo(Status);
+const InfoCardMemoized = React.memo(InfoCard);
 
 export default App;
 // http://0.0.0.0:3000/finland/{z}/{x}/{y}

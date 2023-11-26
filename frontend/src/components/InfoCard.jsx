@@ -1,35 +1,54 @@
 import { useState, useRef, useEffect } from "react";
 
-const InfoCard = ({ isOpen, setIsOpen }) => {
-  const drawerRef = useRef(null);
+import ObjectHandler from "./ObjectHandler";
 
-  const handleButtonClick = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const handleClickOutside = (event) => {
-    if (drawerRef.current && !drawerRef.current.contains(event.target)) {
-      setIsOpen(false);
-    }
-  };
+import "./InfoCard.css";
+const InfoCard = ({ iconInfo, setIconInfo, testPlanes }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [content, setContent] = useState("");
+  let cardRef = useRef();
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+    const handleClickOutside = (event) => {
+      if (cardRef.current && !cardRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setIconInfo(false);
+      }
     };
-  }, []);
+    // Open Card only if data available
+    if (Object.keys(iconInfo).length !== 0) {
+      document.addEventListener("click", handleClickOutside);
+      setIsOpen(true);
+    }
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [iconInfo]);
+
+  useEffect(() => {
+    if (isOpen) {
+      console.log("isopen and going to objectHandler");
+      // .planes ONLY NEEDED FOR TESTDATA
+      const obj = testPlanes.find((obj) => obj.id === iconInfo.id);
+      // const obj = planes.find((obj) => obj.id === planeInfo.id)
+
+      if (obj) {
+        setContent(<ObjectHandler obj={obj} />);
+      } else {
+        setContent(
+          <div>
+            <h2>No data</h2>
+          </div>
+        );
+      }
+    }
+  }, [iconInfo, testPlanes]);
   return (
-    <div className={`side-drawer ${isOpen ? "open" : ""}`} ref={drawerRef}>
+    <div>
       {isOpen && (
         <>
-          <div className="header">
-            <span className="close-button">&times;</span>
-          </div>
-          <div className="content">
-            <h1>testtesxt</h1>
-            <p>more test text</p>
+          <div className="content" ref={cardRef}>
+            {content}
           </div>
         </>
       )}
