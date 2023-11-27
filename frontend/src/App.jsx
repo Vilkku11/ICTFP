@@ -97,9 +97,8 @@ function App() {
     pickable: true,
     //onHover: (info, event) => console.log("Hovered:", info.object),
     //onClick: (info, event) => console.log("Clicked:", info.object.name),
-    onClick: (d) => {
-      setIsOpen(!isOpen);
-      console.log(isOpen);
+    onClick: (info) => {
+      setIconInfo(info.object);
     },
     iconAtlas: "airplane.svg",
     iconMapping: {
@@ -109,7 +108,7 @@ function App() {
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
     getAngle: (d) => d.velocity[2],
     getSize: (d) => iconSize,
-    getColor: (d) => [Math.sqrt(d.exits), 140, 0],
+    getColor: (d) => [255, 255, 0],
     updateTriggers: {
       getSize: iconSize,
     },
@@ -117,7 +116,7 @@ function App() {
 
   const planeIdLayer = new TextLayer({
     id: "plane-id-layer",
-    data: testPlanes,
+    data: planes,
     pickable: true,
     background: true,
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
@@ -163,7 +162,7 @@ function App() {
       getSize: iconSize,
     },
   });
-
+/*
   const testLayer = new IconLayer({
     id: "testlayer",
     data: testPlanes,
@@ -185,7 +184,7 @@ function App() {
     updateTriggers: {
       getSize: iconSize,
     },
-  });
+  });*/
 
   // Handles icon, textlayer size on different zoom levels
   const handleIconSize = (zoom) => {
@@ -250,7 +249,7 @@ function App() {
             planeLayer,
             planeIdLayer,
             virtualPointLayer,
-            testLayer,
+            //testLayer,
             receiverLayer,
           ]}
         />
@@ -260,6 +259,7 @@ function App() {
         iconInfo={iconInfo}
         setIconInfo={setIconInfo}
         testPlanes={testPlanes}
+        planes={planes}
       />
     </>
   );

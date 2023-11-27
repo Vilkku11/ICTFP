@@ -5,7 +5,7 @@ function Socket(props) {
   const [url, setUrl] = useState("");
 
   const fetchWebSocketIp = async () => {
-    const response = await fetch("http://0.0.0.0:5000/getip");
+    const response = await fetch("http://localhost:5000/getip");
     const data = await response.json();
     console.log(data);
     const url = "ws://" + data.ip + ":8765";
@@ -22,7 +22,7 @@ function Socket(props) {
   useEffect(() => {
     let newSocket = "";
     if (url) {
-      newSocket = new WebSocket(url);
+      newSocket = new WebSocket("ws://localhost:8765");
 
       newSocket.onopen = () => {
         console.log("Websocket OPEN");

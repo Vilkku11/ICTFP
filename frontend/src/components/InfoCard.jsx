@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import ObjectHandler from "./ObjectHandler";
 
 import "./InfoCard.css";
-const InfoCard = ({ iconInfo, setIconInfo, testPlanes }) => {
+const InfoCard = ({ iconInfo, setIconInfo, testPlanes, planes }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
   let cardRef = useRef();
@@ -29,7 +29,11 @@ const InfoCard = ({ iconInfo, setIconInfo, testPlanes }) => {
     if (isOpen) {
       console.log("isopen and going to objectHandler");
       // .planes ONLY NEEDED FOR TESTDATA
-      const obj = testPlanes.find((obj) => obj.id === iconInfo.id);
+      let obj = ""
+      if(planes){
+           obj = planes.find((obj) => obj.id === iconInfo.id);
+      }
+
       // const obj = planes.find((obj) => obj.id === planeInfo.id)
 
       if (obj) {
