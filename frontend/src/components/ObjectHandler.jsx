@@ -9,12 +9,14 @@ const ObjectHandler = (obj) => {
 
   // Determine object type
   if ("flight" in obj.obj) {
-    console.log("why not running");
     content = (
       <div className="list-container">
         <ul className="list-items">
           <li>
             <strong>ID:</strong>
+          </li>
+          <li>
+            <strong>FLIGHT:</strong>
           </li>
           <li>
             <strong>Latitude:</strong>
@@ -28,9 +30,11 @@ const ObjectHandler = (obj) => {
         </ul>
         <ul className="list-items">
           <li>{obj.obj.id}</li>
+          <li>{obj.obj.flight}</li>
           <li>{roundToDecimal(obj.obj.coordinates[0], 5)}</li>
           <li>{roundToDecimal(obj.obj.coordinates[1], 5)}</li>
           <li>{obj.obj.altitude}</li>
+          
         </ul>
       </div>
     );
