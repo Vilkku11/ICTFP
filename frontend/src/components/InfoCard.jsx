@@ -3,7 +3,14 @@ import { useState, useRef, useEffect } from "react";
 import ObjectHandler from "./ObjectHandler";
 
 import "./InfoCard.css";
-const InfoCard = ({ iconInfo, setIconInfo, testPlanes, planes }) => {
+const InfoCard = ({
+  iconInfo,
+  setIconInfo,
+  testPlanes,
+  planes,
+  virtualPoints,
+  testPoints,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
   let cardRef = useRef();
@@ -27,17 +34,23 @@ const InfoCard = ({ iconInfo, setIconInfo, testPlanes, planes }) => {
 
   useEffect(() => {
     if (isOpen) {
-      console.log("isopen and going to objectHandler");
-      // .planes ONLY NEEDED FOR TESTDATA
-      let obj = ""
-      if(planes){
-           obj = planes.find((obj) => obj.id === iconInfo.id);
+      let obj = "";
+      let type = "";
+
+      // testPlanes -> planes
+      if (iconInfo.hasOwnProperty("flight") && testPlanes) {
+        obj = testPlanes.find((obj) => obj.id === iconInfo.id);
+        type = "plane";
+      } else if (iconInfo.hasOwnProperty("position") && testPoints) {
+        // testPoints -> virtualPoints
+        obj = testPoints.find((obj) => obj.id === iconInfo.id);
+        type = "virtualPoint";
       }
 
       // const obj = planes.find((obj) => obj.id === planeInfo.id)
 
       if (obj) {
-        setContent(<ObjectHandler obj={obj} />);
+        setContent(<ObjectHandler obj={obj} type={type} />);
       } else {
         setContent(
           <div>

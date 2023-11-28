@@ -1,8 +1,9 @@
 import "./Status.css";
-const Status = (props) => {
+const Status = ({ webSocket, receiver }) => {
   return (
     <div className="status-text">
-      <p>Websocket {props.webSocket ? "CONNECTED" : "DISCONNECTED"}</p>
+      <p>Websocket: {webSocket ? "CONNECTED" : "DISCONNECTED"}</p>
+      <p>Receiver: {receiver ? "CONNECTED" : "NO CONNECTION"}</p>
     </div>
   );
 };

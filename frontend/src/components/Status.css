@@ -1,5 +1,25 @@
 .status-text {
   position: absolute;
-  background-color: rgba(255, 255, 255, 0.8);
-  display: inline-block;
+  top: 0px;
+  left: 0px;
+  padding: 0px;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-text p {
+  margin: 0px;
+  text-align: left;
+  width: 48%;
+  white-space: nowrap;
+}
+
+.status-text p:first-child {
+  margin-right: 10px;
+}
+
+.status-text p:last-child {
+  text-align: right;
 }

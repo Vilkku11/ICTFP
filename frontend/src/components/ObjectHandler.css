@@ -4,7 +4,7 @@
   border: 1px solid #ccc;
   border-radius: 5px;
   padding: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
 }
 
 .list-items {
@@ -20,5 +20,21 @@
 }
 
 .list-items li strong {
+  margin-right: 5px;
+}
+
+.list-items-virtualpoint {
+  list-style-type: none;
+  padding: 0;
+  width: 45%; /* Adjust as needed */
+}
+
+.list-items-virtualpoint li {
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.list-items-virtualpoint li strong {
   margin-right: 5px;
 }

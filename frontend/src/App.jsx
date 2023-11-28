@@ -13,6 +13,8 @@ import Socket from "./Socket";
 import Status from "./components/Status";
 import InfoCard from "./components/InfoCard";
 
+import { calculateHeading } from "./utils/dataFormat";
+
 import "maplibre-gl/dist/maplibre-gl.css";
 
 // Rendering all Layers on top of the map
@@ -38,7 +40,14 @@ function App() {
   // TextBox offset in pixel coordinates
   const [textOffset, setTextOffset] = useState([0, -30]);
 
+  // Websocket and receiver status
   const [webSocket, setWebSocket] = useState(false);
+  const [receiver, setReceiver] = useState(false);
+
+  // Plane and virtualpoint data arrays
+  const [planes, setPlanes] = useState([]);
+  const [virtualPoints, setVirtualPoints] = useState([]);
+
   // Infocard
   const [iconInfo, setIconInfo] = useState({});
   const testData = {
@@ -53,7 +62,7 @@ function App() {
       {
         id: "4601FD",
         flight: "FIN9VM__",
-        velocity: [259, 331.65430637692333, 0, "GS"],
+        velocity: [-100, 0, 0, "GS"],
         coordinates: [61.24530029296875, 23.863481794084823],
         altitude: 20025,
       },
@@ -69,12 +78,10 @@ function App() {
   };
   const [testPlanes, setTestPlanes] = useState(testData.planes);
   const [testPoints, setTestPoints] = useState([
-    { name: "first", coordinates: [61.29, 23.47] },
-    { name: "second", coordinates: [61.2, 23.5] },
+    { id: "first", position: [61.29, 23.47], altitude: 500, planes: {} },
+    { id: "second", position: [61.2, 23.5], altitude: 500, planes: {} },
   ]);
 
-  const [planes, setPlanes] = useState([]);
-  const [virtualPoints, setVirtualPoints] = useState([]);
   const [receiverPoint, setReceiverPoint] = useState([
     { name: "receiver", coordinates: [61.3, 23.8] },
   ]);
@@ -95,8 +102,6 @@ function App() {
     id: "plane-layer",
     data: planes,
     pickable: true,
-    //onHover: (info, event) => console.log("Hovered:", info.object),
-    //onClick: (info, event) => console.log("Clicked:", info.object.name),
     onClick: (info) => {
       setIconInfo(info.object);
     },
@@ -150,19 +155,22 @@ function App() {
     id: "virtual-point-layer",
     data: testPoints,
     pickable: true,
+    onClick: (info) => {
+      setIconInfo(info.object);
+    },
     iconAtlas: "virtualPoint.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
     },
     getIcon: (d) => "marker",
-    getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
+    getPosition: (d) => [d.position[1], d.position[0]],
     getSize: (d) => iconSize,
     getColor: (d) => [0, 0, 0],
     updateTriggers: {
       getSize: iconSize,
     },
   });
-/*
+
   const testLayer = new IconLayer({
     id: "testlayer",
     data: testPlanes,
@@ -178,13 +186,13 @@ function App() {
     },
     getIcon: (d) => "marker",
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
-    //getAngle: (d) => d.angle,
+    getAngle: (d) => calculateHeading(d.velocity),
     getSize: (d) => iconSize,
     getColor: (d) => [Math.sqrt(d.exits), 140, 0],
     updateTriggers: {
       getSize: iconSize,
     },
-  });*/
+  });
 
   // Handles icon, textlayer size on different zoom levels
   const handleIconSize = (zoom) => {
@@ -217,6 +225,7 @@ function App() {
     <>
       <Socket
         setWebSocket={setWebSocket}
+        setReceiver={setReceiver}
         setPlanes={setPlanes}
         planes={planes}
         setVirtualPoints={setVirtualPoints}
@@ -249,17 +258,19 @@ function App() {
             planeLayer,
             planeIdLayer,
             virtualPointLayer,
-            //testLayer,
+            testLayer,
             receiverLayer,
           ]}
         />
       </Map>
-      <StatusMemoized webSocket={webSocket} />
+      <StatusMemoized webSocket={webSocket} receiver={receiver} />
       <InfoCardMemoized
         iconInfo={iconInfo}
         setIconInfo={setIconInfo}
         testPlanes={testPlanes}
         planes={planes}
+        virtualPoints={virtualPoints}
+        testPoints={testPoints}
       />
     </>
   );

@@ -1,14 +1,14 @@
 import "./ObjectHandler.css";
-const ObjectHandler = (obj) => {
+
+import { roundToDecimal, calculateHeading } from "../utils/dataFormat";
+
+const ObjectHandler = ({ obj, type }) => {
   let content = "";
   console.log(obj);
-
-  const roundToDecimal = (number, decimals) => {
-    return Number(number.toFixed(decimals));
-  };
+  console.log(type);
 
   // Determine object type
-  if ("flight" in obj.obj) {
+  if (type == "plane") {
     content = (
       <div className="list-container">
         <ul className="list-items">
@@ -16,7 +16,7 @@ const ObjectHandler = (obj) => {
             <strong>ID:</strong>
           </li>
           <li>
-            <strong>FLIGHT:</strong>
+            <strong>Flight:</strong>
           </li>
           <li>
             <strong>Latitude:</strong>
@@ -27,20 +27,48 @@ const ObjectHandler = (obj) => {
           <li>
             <strong>Altitude:</strong>
           </li>
+          <li>
+            <strong>V/S:</strong>
+          </li>
+          <li>
+            <strong>Heading:</strong>
+          </li>
         </ul>
         <ul className="list-items">
-          <li>{obj.obj.id}</li>
-          <li>{obj.obj.flight}</li>
-          <li>{roundToDecimal(obj.obj.coordinates[0], 5)}</li>
-          <li>{roundToDecimal(obj.obj.coordinates[1], 5)}</li>
-          <li>{obj.obj.altitude}</li>
-          
+          <li>{obj.id}</li>
+          <li>{obj.flight}</li>
+          <li>{roundToDecimal(obj.coordinates[0], 3)}</li>
+          <li>{roundToDecimal(obj.coordinates[1], 3)}</li>
+          <li>{obj.altitude}</li>
+          <li>{obj.velocity[2]}</li>
+          <li>{calculateHeading(obj.velocity)}</li>
         </ul>
       </div>
     );
-  } else {
-    console.log("maybe virtualpoint?");
+  } else if (type == "virtualPoint") {
+    console.log("virtualpoint");
+    content = (
+      <div className="list-container">
+        <ul className="list-items-virtualpoint">
+          <li>
+            <strong>ID:</strong>
+          </li>
+          <li>
+            <strong>Lat:</strong>
+          </li>
+          <li>
+            <strong>Lon:</strong>
+          </li>
+        </ul>
+        <ul className="list-items">
+          <li>{obj.id}</li>
+          <li>{obj.position[0]}</li>
+          <li>{obj.position[1]}</li>
+        </ul>
+      </div>
+    );
   }
+
   return content;
 };
 
