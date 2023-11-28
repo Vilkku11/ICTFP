@@ -5,9 +5,10 @@ import json
 import uuid
 import time
 import os
+import math
 import pyModeS as pms
 from vincenty import vincenty
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from adsb.adsbclient import ADSBClient
 from adsb.websocket import WebSocketServer
 from adsb.csvHandler import CSVHandler
@@ -17,6 +18,7 @@ from adsb.logger import Logger
 class ADSBWorker:
     def __init__(self) -> None:
         self.logger = Logger("Worker");
+        self.tz = timezone(timedelta(hours=+2));
 
         self.websocket = None
         self.adsb_client = None
@@ -54,10 +56,48 @@ class ADSBWorker:
         while self.websocket.server == None or self.websocket.server.is_serving() == False or self.adsb_client == None or self.adsb_client.client.is_alive() == False:
             time.sleep(1);
 
-        self.poller = threading.Thread(target=asyncio.run , args=[self.websocket.poll(self.adsb_client.get_client_status, 60)]);
-        self.poller.start();
+        # poll websocket status
+        self.websocket_poller = threading.Thread(target=asyncio.run , args=[self.websocket.poll(self.adsb_client.get_client_status, 60)]);
+        self.websocket_poller.start();
+
+        # poll adsb client status
+        self.adsb_poller = threading.Thread(target=asyncio.run, args=[self.adsb_client.poll(60)]);
+        self.adsb_poller.start();
+
+        # worker state
+        self.state_poller = threading.Thread(target=asyncio.run, args=[self.poll_status(60)]);
+        self.state_poller.start();
+
         self.logger.info("Status polling started");
     
+    async def poll_status(self, seconds):
+
+        def refresh_planes():
+            for plane in self.planes:
+                dtime: timedelta = datetime.now(self.tz) - plane.updated;
+                print(dtime.total_seconds())
+                if dtime.total_seconds() > 60:
+                    self.planes.remove(plane);
+                    self.logger.info(f"Plane instance '{plane.id}' timed out");
+        
+        while True:
+            time.sleep(seconds);
+            refresh_planes();
+            await self.update_virtual_point_data();
+
+    async def update_virtual_point_data(self):
+        for vp in self.virtual_points:
+            vp.planes = [];
+            for plane in self.planes:
+
+                data = {
+                    "id_plane": plane.id,
+                    "distance": await self.distance_between((vp.lat, vp.long),(plane.lat, plane.long)),
+                    "angle": self.heading_between((vp.lat, vp.long),(plane.lat, plane.long))
+                };
+
+                vp.planes.append(data);
+
     def create_csv_handler(self): # create and start csv handler to persist messages
         def init():
             self.csv_handler = CSVHandler(os.getcwd());
@@ -106,6 +146,7 @@ class ADSBWorker:
         if not found: # no previous matches - Create new instace 
             new_plane = Plane(msg_class);
             self.planes.append(new_plane);
+            await self.update_virtual_point_data();
             self.logger.info(f"New plane instanced: {msg_class.id}");
         
         if self.csv_handler != None: self.csv_handler.update_log(msg_class); #persist message to csv
@@ -161,10 +202,30 @@ class ADSBWorker:
     async def distance_between(coordinates_a, coordinates_b):
         return vincenty(coordinates_a, coordinates_b);
 
+    def heading_between(coordinate_a, coordinate_b):
+        # Extract coordinates
+        x1, y1 = coordinate_a
+        x2, y2 = coordinate_b
+        
+        # Calculate differences in coordinates
+        dx = x2 - x1
+        dy = y2 - y1
+        
+        # Calculate angle in radians
+        heading_radians = math.atan2(dy, dx)
+        
+        # Convert radians to degrees
+        heading_degrees = math.degrees(heading_radians)
+        
+        # Adjust to have heading in range [0, 360)
+        heading_degrees = (heading_degrees + 360) % 360
+        
+        return heading_degrees
 
 class Plane:
     def __init__(self, msg_class=None):
-        self.updated = datetime.now()
+        self.tz = timezone(timedelta(hours=+2))
+        self.updated = datetime.now(self.tz)
         self.id = None;
         self.flight = None;
         self.direction = 0.0;
@@ -182,7 +243,7 @@ class Plane:
 
 
     def update(self, msg_data):
-        self.updated = datetime.now();
+        self.updated = datetime.now(self.tz);
         self.parse_msg_data(msg_data);
         
     
@@ -262,6 +323,7 @@ class VirtualPoint:
         self.long = 0.0;
         self.lat = 0.0;
         self.alt = 0.0;
+        self.planes = [];
         
         if isinstance(data, dict) and dict.keys(data).__contains__("position"):#update data on given values
             self.update(data["position"]); 
@@ -273,7 +335,8 @@ class VirtualPoint:
         if dict.keys(position).__contains__("alt"): self.alt = position["alt"];
     
     def position(self):
-        return [self.lat, self.long]
+        return [self.lat, self.long];
+
 
     def get_json(self):
         return json.dumps({"id": self.id, "position": self.position(), "altitude": self.alt});
