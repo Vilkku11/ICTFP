@@ -339,7 +339,7 @@ class VirtualPoint:
 
 
     def get_json(self):
-        return json.dumps({"id": self.id, "position": self.position(), "altitude": self.alt});
+        return json.dumps({"id": self.id, "position": self.position(), "altitude": self.alt, "planes": self.planes});
 
 
 if __name__ == "__main__":
