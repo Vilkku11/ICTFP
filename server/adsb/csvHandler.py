@@ -1,5 +1,5 @@
 from adsb.logger import Logger;
-import datetime
+from datetime import datetime, timezone, timedelta
 import os
 
 class CSVHandler:
@@ -26,7 +26,7 @@ class CSVHandler:
         self.csv_f.write("\n");
 
     def update_folder_path(self):
-        dtime = datetime.datetime.now();
+        dtime = datetime.now(timezone(timedelta(hours=+2)));
         year = dtime.strftime("%Y");
         month = dtime.strftime("%m");
         self.log_path = self.initial_path + f"/log/{year}/{month}"
@@ -46,7 +46,8 @@ class CSVHandler:
                 filename_changed = True;
 
             self.csv_f = open(self.current_file, "a+"); # create file if not present / append to file
-            if filename_changed == True: self.add_column_headers(message); # add column headers for csv
+            if filename_changed == True and not os.path.exists(self.current_file):
+                self.add_column_headers(message); # add column headers for csv
             
         except Exception:
             self.logger.error(f"Error on opening file: {self.current_file}");

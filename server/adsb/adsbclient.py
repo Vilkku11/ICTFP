@@ -19,7 +19,6 @@ class ADSBClient(TcpClient):
         self.worker = worker;                   #adsb worker
         self.client = None;                     #client runtime thread object
         self.last_message = None;
-        self.connection = False;
 
     #start adsb client subcriber on thread
     def start(self):
@@ -28,13 +27,27 @@ class ADSBClient(TcpClient):
         
         if self.client.is_alive() == False:
             self.client.start();
-            self.connection = True;
             self.logger.info(f'ADS-B -Client started listening {self.host}:{self.port}');
     
     #client esist we stop its subscription
     def stop(self):
         if self.client:
             self.client.join();
+            self.client = None;
+
+    #client status poller
+    async def poll(self, seconds):
+        while True:
+            if self.socket.closed == True:
+                self.logger.info("Socket is closed: trying to reconnect")
+                try:
+                    # need to close current thread
+                    self.stop();
+                    self.start();
+                except Exception:
+                    pass;
+        
+            time.sleep(seconds);
 
     #message handler
     def handle_messages(self, messages):
@@ -58,16 +71,9 @@ class ADSBClient(TcpClient):
         self.logger.info("ADS-B client restart activated");
         self.client.run();
 
-    def check_client(self):
-        if self.client.is_alive():
-            self.connection = self.client.is_alive();
-        
-        else:
-            self.connection;
-
 
     def get_client_status(self):
-        return json.dumps({"adsb": {"connection": self.connection, "last_msg_ts": self.last_message}});
+        return json.dumps({"adsb": {"connection": self.socket.closed == False, "last_msg_ts": self.last_message}});
         
 
 
