@@ -6,10 +6,10 @@ import "./InfoCard.css";
 const InfoCard = ({
   iconInfo,
   setIconInfo,
-  testPlanes,
+  //testPlanes,
   planes,
   virtualPoints,
-  testPoints,
+  //testPoints,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
@@ -38,12 +38,12 @@ const InfoCard = ({
       let type = "";
 
       // testPlanes -> planes
-      if (iconInfo.hasOwnProperty("flight") && testPlanes) {
-        obj = testPlanes.find((obj) => obj.id === iconInfo.id);
+      if (iconInfo.hasOwnProperty("flight") && planes) {
+        obj = planes.find((obj) => obj.id === iconInfo.id);
         type = "plane";
-      } else if (iconInfo.hasOwnProperty("position") && testPoints) {
+      } else if (iconInfo.hasOwnProperty("position") && virtualPoints) {
         // testPoints -> virtualPoints
-        obj = testPoints.find((obj) => obj.id === iconInfo.id);
+        obj = virtualPoints.find((obj) => obj.id === iconInfo.id);
         type = "virtualPoint";
       }
 
@@ -59,7 +59,7 @@ const InfoCard = ({
         );
       }
     }
-  }, [iconInfo, testPlanes]);
+  }, [iconInfo, planes]);
   return (
     <div>
       {isOpen && (

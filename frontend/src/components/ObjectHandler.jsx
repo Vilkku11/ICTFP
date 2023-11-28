@@ -4,8 +4,6 @@ import { roundToDecimal, calculateHeading } from "../utils/dataFormat";
 
 const ObjectHandler = ({ obj, type }) => {
   let content = "";
-  console.log(obj);
-  console.log(type);
 
   // Determine object type
   if (type == "plane") {

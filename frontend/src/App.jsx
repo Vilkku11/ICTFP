@@ -47,9 +47,12 @@ function App() {
   // Plane and virtualpoint data arrays
   const [planes, setPlanes] = useState([]);
   const [virtualPoints, setVirtualPoints] = useState([]);
+  const [receiverPoint, setReceiverPoint] = useState([]);
 
   // Infocard
   const [iconInfo, setIconInfo] = useState({});
+
+  //testdata
   const testData = {
     planes: [
       {
@@ -76,14 +79,11 @@ function App() {
     ],
     virtual_points: [],
   };
+  // Testplanes and Testpoints
   const [testPlanes, setTestPlanes] = useState(testData.planes);
   const [testPoints, setTestPoints] = useState([
     { id: "first", position: [61.29, 23.47], altitude: 500, planes: {} },
     { id: "second", position: [61.2, 23.5], altitude: 500, planes: {} },
-  ]);
-
-  const [receiverPoint, setReceiverPoint] = useState([
-    { name: "receiver", coordinates: [61.3, 23.8] },
   ]);
 
   // TEST PLANE DATA TO SEE PERFORMANCE
@@ -138,6 +138,9 @@ function App() {
     id: "receiver-point",
     data: receiverPoint,
     pickable: true,
+    onClick: (info) => {
+      setIconInfo(info.object);
+    },
     iconAtlas: "receiver.svg",
     iconMapping: {
       marker: { x: 0, y: 0, width: 800, height: 800, mask: true },

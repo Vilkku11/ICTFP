@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 function Socket(props) {
-  const [socket, setSocket] = useState(null);
-
   useEffect(() => {
     let newSocket = "";
 
@@ -11,6 +9,8 @@ function Socket(props) {
     newSocket.onopen = () => {
       console.log("Websocket OPEN");
       props.setWebSocket(true);
+
+      newSocket.send = () => {};
     };
 
     newSocket.onmessage = (event) => {
@@ -39,8 +39,6 @@ function Socket(props) {
       props.setWebSocket(false);
       props.setReceiver(false);
     };
-
-    setSocket(newSocket);
 
     return () => {
       console.log("component unmounted, closing WebSocket");
