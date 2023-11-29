@@ -36,7 +36,6 @@ const InfoCard = ({
     if (isOpen) {
       let obj = "";
       let type = "";
-
       // testPlanes -> planes
       if (iconInfo.hasOwnProperty("flight") && planes) {
         obj = planes.find((obj) => obj.id === iconInfo.id);

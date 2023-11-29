@@ -53,12 +53,13 @@ function App() {
   const [iconInfo, setIconInfo] = useState({});
 
   //testdata
-  /*const testData = {
+  const testData = {
     planes: [
       {
         id: "461E1C",
         flight: "FIN4MW__",
         velocity: [423, 1.8956222586147526, 640, "GS"],
+        heading: 1,
         coordinates: [67.61805725097656, 31.711287064985793],
         altitude: 36775,
       },
@@ -66,6 +67,7 @@ function App() {
         id: "4601FD",
         flight: "FIN9VM__",
         velocity: [-100, 0, 0, "GS"],
+        heading: 200,
         coordinates: [61.24530029296875, 23.863481794084823],
         altitude: 20025,
       },
@@ -73,6 +75,7 @@ function App() {
         id: "AC062A",
         flight: null,
         velocity: 0.0,
+        heading: 25,
         coordinates: [0.0, 0.0],
         altitude: -1,
       },
@@ -80,7 +83,7 @@ function App() {
     virtual_points: [],
   };
   // Testplanes and Testpoints
-  const [testPlanes, setTestPlanes] = useState(testData.planes);
+ /* const [testPlanes, setTestPlanes] = useState(testData.planes);
   const [testPoints, setTestPoints] = useState([
     { id: "first", position: [61.29, 23.47], altitude: 500, planes: {} },
     { id: "second", position: [61.2, 23.5], altitude: 500, planes: {} },
@@ -111,7 +114,7 @@ function App() {
     },
     getIcon: (d) => "marker",
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
-    getAngle: (d) => calculateHeading(d.velocity),
+    getAngle: (d) => d.heading,
     getSize: (d) => iconSize,
     getColor: (d) => [255, 255, 0],
     updateTriggers: {
@@ -270,10 +273,10 @@ function App() {
       <InfoCardMemoized
         iconInfo={iconInfo}
         setIconInfo={setIconInfo}
-        testPlanes={testPlanes}
+        //testPlanes={testPlanes}
         planes={planes}
         virtualPoints={virtualPoints}
-        testPoints={testPoints}
+        //testPoints={testPoints}
       />
     </>
   );

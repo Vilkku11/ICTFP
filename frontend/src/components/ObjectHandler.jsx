@@ -39,7 +39,7 @@ const ObjectHandler = ({ obj, type }) => {
           <li>{roundToDecimal(obj.coordinates[1], 3)}</li>
           <li>{obj.altitude}</li>
           <li>{obj.velocity[2]}</li>
-          <li>{calculateHeading(obj.velocity)}</li>
+          <li>{(obj.heading)}</li>
         </ul>
       </div>
     );
