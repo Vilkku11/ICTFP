@@ -8,10 +8,16 @@ REQUIREMENTS = requirements.txt
 
 # Directory containing the .tar.gz files
 directory_path="dependencies/"
+init_python:
+    tar xvf Python-3.11.6.tgz
+    cd Python-3.11.6.tgz
+    ./configure --enable-optimizations --with-ensurepip=install
+    make -j 8
+    sudo make altinstall
 
 # Create a virtual environment
 venv:
-	python3 -m venv $(VENV_NAME)
+	python3.11 -m venv $(VENV_NAME)
 
 # Install requirements in the virtual environment
 install:
@@ -36,4 +42,4 @@ install_local:
 clean:
 	rm -rf $(VENV_NAME)
 
-.PHONY: venv install install_local clean
+.PHONY: init_python venv install install_local clean
