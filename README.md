@@ -6,8 +6,50 @@ Extract .zip to ./server/map
 
 
 ## python 
-tar xvf Python-3.12.0.tgz
-cd Python-3.12.0.tgz
+makefile: ``make init_python``
+
+```
+tar xvf Python-3.11.6.tgz
+cd Python-3.11.6
 ./configure --enable-optimizations --with-ensurepip=install
 make -j 8
 sudo make altinstall
+```
+
+## python virtual environment
+makefile: 
+1. ``make venv``
+
+    ```
+    python3.11 -m venv $(VENV_NAME)
+    ```
+
+2.  install dependencies to virtual environment
+
+    A) ``make install_local``
+
+    ```
+    . $(VENV_NAME)/bin/activate; \
+	if [ ! -d "$(directory_path)" ]; then \
+        echo "Directory not found."; \
+        exit 1; \
+    fi; \
+    cd "$(directory_path)" || exit; \
+    for f in *.tar.gz; do \
+        echo "Installing $$f..."; \
+        python3 -m pip install "$$f"; \
+    done; \
+    echo "Installation complete."
+    ```
+
+    B) ``make install``
+
+    ```
+    . $(VENV_NAME)/bin/activate; \
+	python3 -m pip install --upgrade pip
+	python3 -m pip install -r $(REQUIREMENTS)
+    ```
+
+
+
+

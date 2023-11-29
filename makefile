@@ -8,12 +8,14 @@ REQUIREMENTS = requirements.txt
 
 # Directory containing the .tar.gz files
 directory_path="dependencies/"
-init_python:
-    tar xvf Python-3.11.6.tgz
-    cd Python-3.11.6.tgz
-    ./configure --enable-optimizations --with-ensurepip=install
-    make -j 8
-    sudo make altinstall
+
+# install python from source
+init_python: 
+	tar xvf Python-3.11.6.tgz
+	cd Python-3.11.6 && \
+	./configure --enable-optimizations --with-ensurepip=install && \
+	make -j 8 && \
+	sudo make altinstall
 
 # Create a virtual environment
 venv:
