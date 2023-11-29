@@ -8,7 +8,7 @@ class Plane:
         self.updated = datetime.now(self.tz)
         self.id = None;
         self.flight = None;
-        self.direction = 0.0;
+        self.heading = 0.0;
         self.velocity = 0.0;
         self.alt = 0.0;
         self.long = 0.0;
@@ -34,8 +34,8 @@ class Plane:
         if msg_data.callsign != None:
             self.flight = msg_data.callsign;
         
-        if msg_data.direction != None:
-            self.direction = msg_data.direction;
+        if msg_data.heading != None:
+            self.heading = msg_data.heading;
         
         if msg_data.velocity != None:
             self.velocity = msg_data.velocity;

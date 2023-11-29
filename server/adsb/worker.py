@@ -30,7 +30,7 @@ class ADSBWorker:
         ip = socket.gethostbyname(socket.gethostname());
         self.create_websocket(ip, 8765);
         self.connect_adsb_client("radarcape", 10002);
-        self.connect_gps_client("radarcape", 10685);
+        #TODO: self.connect_gps_client("radarcape", 10685);
         self.start_polling();
         self.create_csv_handler();
         
@@ -85,7 +85,6 @@ class ADSBWorker:
         def refresh_planes():
             for plane in self.planes:
                 dtime: timedelta = datetime.now(self.tz) - plane.updated;
-                print(dtime.total_seconds())
                 if dtime.total_seconds() > 60:
                     self.planes.remove(plane);
                     self.logger.info(f"Plane instance '{plane.id}' timed out");

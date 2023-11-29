@@ -89,7 +89,7 @@ class ADSBmessage:
         self.ts = None
         self.oe_flag = None
         self.callsign = None
-        self.direction = None
+        self.heading = None
         self.velocity = None
         self.altitude = None
         self.lat = None
@@ -108,7 +108,7 @@ class ADSBmessage:
         "downlink_format": self.downlink_format, 
         "odd/even_flag": self.oe_flag, 
         "callsign": self.callsign,
-        "direction": self.direction,
+        "heading": self.heading,
         "altitude": self.altitude,
         "latitude": self.lat,
         "longitude": self.long,
@@ -163,7 +163,7 @@ class ADSBmessage:
         except Exception: pass;
 
         try:
-            self.direction = pms.adsb.selected_heading(msg);
+            speed, self.heading = pms.adsb.speed_heading(msg);
         except Exception: pass;
 
         try:
@@ -177,7 +177,7 @@ class ADSBmessage:
         try:
             self.callsign = pms.adsb.callsign(msg);     # callsign
         except Exception: pass;
-    
+
     def set_position(self, latitude, longitude):
         self.lat = latitude;
         self.long = longitude;
