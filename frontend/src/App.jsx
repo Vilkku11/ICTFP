@@ -53,7 +53,7 @@ function App() {
   const [iconInfo, setIconInfo] = useState({});
 
   //testdata
-  const testData = {
+  /*const testData = {
     planes: [
       {
         id: "461E1C",
@@ -96,7 +96,7 @@ function App() {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [testPlanes]);
+  }, [testPlanes]);*/
 
   const planeLayer = new IconLayer({
     id: "plane-layer",
@@ -111,7 +111,7 @@ function App() {
     },
     getIcon: (d) => "marker",
     getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
-    getAngle: (d) => d.velocity[2],
+    getAngle: (d) => calculateHeading(d.velocity),
     getSize: (d) => iconSize,
     getColor: (d) => [255, 255, 0],
     updateTriggers: {
@@ -156,7 +156,7 @@ function App() {
 
   const virtualPointLayer = new IconLayer({
     id: "virtual-point-layer",
-    data: testPoints,
+    data: virtualPoints,
     pickable: true,
     onClick: (info) => {
       setIconInfo(info.object);
@@ -174,7 +174,7 @@ function App() {
     },
   });
 
-  const testLayer = new IconLayer({
+ /* const testLayer = new IconLayer({
     id: "testlayer",
     data: testPlanes,
     pickable: true,
@@ -195,7 +195,7 @@ function App() {
     updateTriggers: {
       getSize: iconSize,
     },
-  });
+  });*/
 
   // Handles icon, textlayer size on different zoom levels
   const handleIconSize = (zoom) => {
@@ -261,7 +261,7 @@ function App() {
             planeLayer,
             planeIdLayer,
             virtualPointLayer,
-            testLayer,
+            //testLayer,
             receiverLayer,
           ]}
         />
