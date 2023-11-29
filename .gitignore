@@ -1,4 +1,3 @@
-/target
-/log
-/venv
-__pycache__
+log/
+venv/
+**/__pycache__
