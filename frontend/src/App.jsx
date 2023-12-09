@@ -52,55 +52,6 @@ function App() {
   // Infocard
   const [iconInfo, setIconInfo] = useState({});
 
-  //testdata
-  const testData = {
-    planes: [
-      {
-        id: "461E1C",
-        flight: "FIN4MW__",
-        velocity: [423, 1.8956222586147526, 640, "GS"],
-        heading: 1,
-        coordinates: [67.61805725097656, 31.711287064985793],
-        altitude: 36775,
-      },
-      {
-        id: "4601FD",
-        flight: "FIN9VM__",
-        velocity: [-100, 0, 0, "GS"],
-        heading: 200,
-        coordinates: [61.24530029296875, 23.863481794084823],
-        altitude: 20025,
-      },
-      {
-        id: "AC062A",
-        flight: null,
-        velocity: 0.0,
-        heading: 25,
-        coordinates: [0.0, 0.0],
-        altitude: -1,
-      },
-    ],
-    virtual_points: [],
-  };
-  // Testplanes and Testpoints
- /* const [testPlanes, setTestPlanes] = useState(testData.planes);
-  const [testPoints, setTestPoints] = useState([
-    { id: "first", position: [61.29, 23.47], altitude: 500, planes: {} },
-    { id: "second", position: [61.2, 23.5], altitude: 500, planes: {} },
-  ]);
-
-  // TEST PLANE DATA TO SEE PERFORMANCE
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      const test = [...testPlanes];
-      test[1].coordinates[0] += 0.001;
-
-      setTestPlanes(test);
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [testPlanes]);*/
-
   const planeLayer = new IconLayer({
     id: "plane-layer",
     data: planes,
@@ -176,29 +127,6 @@ function App() {
       getSize: iconSize,
     },
   });
-
- /* const testLayer = new IconLayer({
-    id: "testlayer",
-    data: testPlanes,
-    pickable: true,
-    //onHover: (info, event) => console.log("Hovered:", info.object),
-    //onClick: (info, event) => console.log("Clicked:", info.object.name),
-    onClick: (info) => {
-      setIconInfo(info.object);
-    },
-    iconAtlas: "airplane.svg",
-    iconMapping: {
-      marker: { x: 0, y: 0, width: 800, height: 800, mask: true },
-    },
-    getIcon: (d) => "marker",
-    getPosition: (d) => [d.coordinates[1], d.coordinates[0]],
-    getAngle: (d) => calculateHeading(d.velocity),
-    getSize: (d) => iconSize,
-    getColor: (d) => [Math.sqrt(d.exits), 140, 0],
-    updateTriggers: {
-      getSize: iconSize,
-    },
-  });*/
 
   // Handles icon, textlayer size on different zoom levels
   const handleIconSize = (zoom) => {
@@ -281,31 +209,8 @@ function App() {
     </>
   );
 }
-/*
-      <Status webSocket={webSocket} />
-      <InfoCard planeInfo={planeInfo} />
-      */
 
 const StatusMemoized = React.memo(Status);
 const InfoCardMemoized = React.memo(InfoCard);
 
 export default App;
-// http://0.0.0.0:3000/finland/{z}/{x}/{y}
-
-/*const testButton = () => {
-    let data = test;
-    //data.push({ name: "receiverlol", coordinates: [23.76, 61.5], angle: 20 });
-    //data[0].coordinates[0] = data[0].coordinates[0] + 0.01;
-    //data[1].angle = data[1].angle + 1;
-    if (data.length >= 1) {
-      data.pop();
-    } else if (data.length == 0) {
-      data.push({ name: "receiverlol", coordinates: [23.76, 61.5], angle: 20 });
-    }
-    console.log(viewState.zoom);
-
-    // shallow check
-    setTest(...[data]);
-    key = data.length;
-    console.log(test);
-  };*/
