@@ -16,8 +16,8 @@ PYTHON_DEPENDENCIES = dependencies/python/dep
 DEPENDENCY_FOLDER = dependencies/python/dep/lib/
 
 load_docker_image:
-	gzip -dk dependencies/docker/docker-python:3.11-slim.tar.gz
-	docker load -i dependencies/docker/docker-python:3.11-slim.tar
+	gzip -dk dependencies/docker/docker-python-3.11-slim.tar.gz
+	docker load -i dependencies/docker/docker-python-3.11-slim.tar
 
 # install python from source
 init_python: 
