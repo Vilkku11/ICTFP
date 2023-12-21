@@ -8,26 +8,22 @@ from adsb.logger import Logger
 from pyModeS.extra.tcpclient import TcpClient
 
 class ADSBClient(TcpClient):
-    def __init__(self, host, port, datatype = "beast", worker = None):
-        super().__init__(host, port, datatype);
-
-        self.logger = Logger("ADSB-CLIENT");    #logger - provide source as parameter
-        self.logger.info("ADSB-Client initialization");
-
-        self.host = host                        #ip
-        self.port = port                        #port
-        self.worker = worker;                   #adsb worker
-        self.client = None;                     #client runtime thread object
-        self.last_message = None;
+    def __init__(self, host, port, data_type = "beast", worker = None):
+        super().__init__(host, port, data_type)
+        self.logger = Logger("ADSB-CLIENT")
+        self.logger.info("ADSB-Client initialization")
+        self.host = host
+        self.port = port
+        self.worker = worker
+        self.client = None
+        self.last_message = None
 
     #start adsb client subcriber on thread
     def start(self):
-        if self.client == None:
-            self.client = threading.Thread(target=self.run);
-        
-        if self.client.is_alive() == False:
-            self.client.start();
-            self.logger.info(f'ADS-B -Client started listening {self.host}:{self.port}');
+        if self.client is None or not self.client.is_alive():
+            self.client = threading.Thread(target=self.run)
+            self.client.start()
+            self.logger.info(f'ADS-B Client started listening {self.host}:{self.port}')
     
     #client esist we stop its subscription
     def stop(self):
@@ -38,53 +34,38 @@ class ADSBClient(TcpClient):
     #client status poller
     async def poll(self, seconds):
         while True:
-            if self.socket.closed == True:
+            if self.socket.closed:
                 self.logger.info("Socket is closed: trying to reconnect")
                 try:
-                    # need to close current thread
-                    self.stop();
-                    self.start();
-                except Exception:
-                    pass;
-        
-            time.sleep(seconds);
+                    self.stop()
+                    self.start()
+                except Exception as e:
+                    self.logger.error(f"Error during reconnection: {e}")
+            time.sleep(seconds)
 
-    #message handler
     def handle_messages(self, messages):
         for msg, ts in messages:
-            if len(msg) != 28: #wrong datatype
+            if len(msg) != 28 or pms.df(msg) != 17 or pms.crc(msg) != 0:
                 continue
-            
-            dataframe = pms.df(msg);
-            
-            if dataframe != 17: #not ADSB
-                continue
-            
-            if pms.crc(msg) != 0: #parity check failure
-                continue
-            
-            self.last_message = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S.%f'); #update last received message status
-            adsb_message = ADSBmessage(msg, ts); # create class instance
-            asyncio.run(self.worker.handle_adsb_message(adsb_message)); # provide message to worker
+            self.last_message = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S.%f')
+            adsb_message = ADSBmessage(msg, ts)
+            asyncio.run(self.worker.handle_adsb_message(adsb_message))
     
     def restart_client(self):
         self.logger.info("ADS-B client restart activated");
         self.client.run();
 
-
     def get_client_status(self):
-        return json.dumps({"adsb": {"connection": self.socket.closed == False, "last_msg_ts": self.last_message}});
+        return json.dumps({"adsb": {"connection": not self.socket.closed, "last_msg_ts": self.last_message}})
 
 class ADSBmessage:
     def __init__(self, msg, ts) -> None:
-
-        self.logger = Logger("Message");
-        
+        self.logger = Logger("Message")
+        self.ts = None
         self.id = None
         self.msg_type = None
         self.msg_version = None
         self.downlink_format = None
-        self.ts = None
         self.oe_flag = None
         self.callsign = None
         self.heading = None
@@ -93,12 +74,12 @@ class ADSBmessage:
         self.lat = None
         self.long = None
         self.msg = None
-
-        self.initialize(msg, ts);
+        self.initialize(msg, ts)
 
     def get_csv_dictionary(self):
+        timestamp = datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M:%S.%f')
         return {\
-        "timestamp": datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M:%S.%f'),
+        "timestamp": timestamp,
         "epoch_timestamp": self.ts,
         "id": self.id, 
         "message_type": self.msg_type, 
@@ -120,61 +101,33 @@ class ADSBmessage:
         return self.get_csv_dictionary().values();
 
     def get_csv(self):
-        data = self.get_csv_values();
-
-        csv_str = "";
-        
-        for attribute in data:
-            if attribute != None: csv_str += f"{attribute}; ";
-            else: csv_str += "null; ";
-        
-        return csv_str+"\n";
+        data = self.get_csv_dictionary().values()
+        csv_str = "; ".join(str(attr) if attr is not None else "null" for attr in data)
+        return csv_str + "\n"
 
     def initialize(self, msg, ts):
-        #message info
-        try:
-            self.ts = ts;                               # timestamp
-        except Exception: pass;
+        # Message info
+        self.ts = ts  # timestamp
+        attributes = {
+            'msg_type': 'typecode',
+            'msg_version': 'version',
+            'downlink_format': 'df',
+            'oe_flag': 'oe_flag',
+            'msg': None,
+            'id': 'icao',
+            'velocity': 'velocity',
+            'altitude': 'altitude',
+            'callsign': 'callsign'
+        }
 
-        try:
-            self.msg_type = pms.adsb.typecode(msg);     # message type
-        except Exception: pass;
-
-        try:
-            self.msg_version = pms.adsb.version(msg);   # message version
-        except Exception: pass;
-
-        try:
-            self.downlink_format = pms.adsb.df(msg);    # downlink format
-        except Exception: pass;
-
-        try:
-            self.oe_flag = pms.adsb.oe_flag(msg);       # odd or even flag
-        except Exception: pass;
-
-        try:
-            self.msg = msg;                             # raw message
-        except Exception: pass;
-
-        try:
-            self.id = pms.adsb.icao(msg);               # fligth identifier
-        except Exception: pass;
-
-        try:
-            speed, self.heading = pms.adsb.speed_heading(msg);
-        except Exception: pass;
-
-        try:
-            self.velocity = pms.adsb.velocity(msg);
-        except Exception: pass;
-
-        try:
-            self.altitude = pms.adsb.altitude(msg);
-        except Exception: pass;
-
-        try:
-            self.callsign = pms.adsb.callsign(msg);     # callsign
-        except Exception: pass;
+        for attr_name, attr_func in attributes.items():
+            try:
+                if attr_func:
+                    setattr(self, attr_name, getattr(pms.adsb, attr_func)(msg))
+                else:
+                    setattr(self, attr_name, None)  # Set to None if no extraction function
+            except Exception:
+                setattr(self, attr_name, None)  # Set to None if an exception occurs
 
     def set_position(self, latitude, longitude):
         self.lat = latitude;
