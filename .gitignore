@@ -1,4 +1,5 @@
 log/
 venv/
 Python-3.11.6/
+dependencies/docker/*.tar
 **/__pycache__

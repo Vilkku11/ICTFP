@@ -7,7 +7,7 @@ VENV_NAME = venv
 PYTHON_VERSION = Python-3.11.6
 
 # Path to requirements file
-PYTHON_REQUIREMENTS = dependencies/python/requirements.txt
+PYTHON_REQUIREMENTS = dependencies/python/requirements_versions.txt
 
 # Directory containing the .tar.gz files
 PYTHON_DEPENDENCIES = dependencies/python/dep
@@ -16,7 +16,7 @@ PYTHON_DEPENDENCIES = dependencies/python/dep
 DEPENDENCY_FOLDER = dependencies/python/dep/lib/
 
 load_docker_image:
-	gzip -d dependencies/docker/docker-python:3.11-slim.tar.gz
+	gzip -dk dependencies/docker/docker-python:3.11-slim.tar.gz
 	docker load -i dependencies/docker/docker-python:3.11-slim.tar
 
 # install python from source
@@ -33,11 +33,12 @@ venv:
 
 # Install requirements to the virtual environment from local packages
 install_dep:
-	. $(VENV_NAME)/bin/activate \
+	. $(VENV_NAME)/bin/activate; \
 	python3.11 -m pip install --upgrade dependencies/python/pip-23.3.1.tar.gz
-	. $(VENV_NAME)/bin/activate \
+	. $(VENV_NAME)/bin/activate; \
 	python3.11 -m pip install dependencies/python/dep/whl/*.whl
 
+# NEEDS CONNECTION - dowload wheels for every python dependency
 download_packages:
 	@while read -r line || [[ -n "$$line" ]]; do \
 		echo "$$line"; \
