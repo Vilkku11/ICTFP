@@ -12,8 +12,8 @@ class WebSocketClient:
             async with websockets.connect(self.server_uri) as websocket:
                 print("connected");
 
-                #await asyncio.sleep(2);
-                #await websocket.send('{"add":[{"id":"vp1","lat":61.5033155,"long":23.807138}]}');
+                await asyncio.sleep(2);
+                await websocket.send('{"add":[{"id":"vp1","lat":61.5033155,"long":23.807138}]}');
 
                 while True:
                     message = await websocket.recv();

@@ -34,16 +34,23 @@ class CSVHandler:
 
     def open_csv_file(self, message):
         try: 
+            add_headers = False;
             dtime = datetime.fromtimestamp(message.ts)       
             dateformat = dtime.strftime("%Y_%m_%d")  # Parse message timestamp
             comparable_file = os.path.join(self.log_path, f"{dateformat}_log.csv")
             
-            if self.csv_f is None and self.current_file != comparable_file:
+            if self.current_file != comparable_file:
                 self.update_folder_path()
                 self.current_file = os.path.join(self.log_path, f"{dateformat}_log.csv")
-                self.add_column_headers(message)
-            if self.csv_f is not None:
-                self.csv_f = open(self.current_file, "a+");
+                add_headers = True;
+
+            self.csv_f = open(self.current_file, "a+");
+            
+            if add_headers:
+                self.add_column_headers(message);
+                add_headers = False;
+
+                
                     
         except Exception as e:
             self.logger.error(f"Error on opening file: {self.current_file}: {e}")
