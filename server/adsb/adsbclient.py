@@ -128,6 +128,13 @@ class ADSBmessage:
                     setattr(self, attr_name, None)  # Set to None if no extraction function
             except Exception:
                 setattr(self, attr_name, None)  # Set to None if an exception occurs
+        
+        # data exceptions        
+        self.msg = msg;
+        
+        if self.velocity:
+            self.heading = self.velocity[1];
+        
 
     def set_position(self, latitude, longitude):
         self.lat = latitude;
