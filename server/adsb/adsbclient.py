@@ -101,8 +101,8 @@ class ADSBmessage:
         return self.get_csv_dictionary().values();
 
     def get_csv(self):
-        data = self.get_csv_dictionary().values()
-        csv_str = "; ".join(str(attr) if attr is not None else "null" for attr in data)
+        data = self.get_csv_dictionary().values();
+        csv_str = "; ".join(str(attr) if attr is not None else "null" for attr in data)+";"
         return csv_str + "\n"
 
     def initialize(self, msg, ts):
@@ -131,7 +131,7 @@ class ADSBmessage:
         
         # data exceptions        
         self.msg = msg;
-        
+
         if self.velocity:
             self.heading = self.velocity[1];
         
