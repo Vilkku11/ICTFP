@@ -64,8 +64,12 @@ class WebSocketServer:
             self.logger.info(f"WebSocket server stopped on ws://{self.host}:{self.port}");
         
         except websockets.ConnectionClosedError: #connection dropped unexpectedly
-            #TODO
-            pass
+            try:
+                self.server.close();
+            except Exception:
+                pass
+            self.logger.info("Websocket closed on error. Starting up new server...")
+            self.run();
 
     async def get_adsb_status(self):
         if self.worker:

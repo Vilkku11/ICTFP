@@ -1,3 +1,6 @@
+#DOCKERFILE
+
+# Stage 1: initiate image and copy dependencies
 FROM python:3.11-slim
 WORKDIR /app
 COPY venv/ /app
