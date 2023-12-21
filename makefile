@@ -34,7 +34,7 @@ venv:
 # Install requirements to the virtual environment from local packages
 install_dep:
 	. $(VENV_NAME)/bin/activate; \
-	python3.11 -m pip install --upgrade dependencies/python/pip-23.3.1.tar.gz
+	python3.11 -m pip install --upgrade dependencies/python/pip-23.3.2-py3-none-any.whl
 	. $(VENV_NAME)/bin/activate; \
 	python3.11 -m pip install dependencies/python/dep/whl/*.whl
 
@@ -49,4 +49,4 @@ download_packages:
 clean:
 	rm -rf $(VENV_NAME)
 
-.PHONY: init_python venv install_dep install_local_dep download_packages clean
+.PHONY: load_docker_image init_python venv install_dep download_packages clean
