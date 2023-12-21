@@ -2,11 +2,9 @@ import asyncio
 import socket
 import threading
 import json
-import uuid
 import time
 import os
 import math
-import pyModeS as pms
 from vincenty import vincenty
 from datetime import datetime, timedelta, timezone
 from adsb.adsbclient import ADSBClient
@@ -15,7 +13,7 @@ from adsb.csvHandler import CSVHandler
 from adsb.logger import Logger
 from adsb.plane import Plane
 from adsb.virtualpoint import VirtualPoint
-
+from adsb.gpsclient import GpsClient
 
 
 class ADSBWorker:
@@ -32,6 +30,7 @@ class ADSBWorker:
         ip = socket.gethostbyname(socket.gethostname());
         self.create_websocket(ip, 8765);
         self.connect_adsb_client("radarcape", 10002);
+        #TODO: self.connect_gps_client("radarcape", 10685);
         self.start_polling();
         self.create_csv_handler();
         
@@ -43,6 +42,14 @@ class ADSBWorker:
 
         except Exception:
             self.logger.error("Connection error on adsb client");
+    
+    def connect_gps_client(self, ip, port):
+        try:
+            self.gps_client = GpsClient(ip, port);
+            #self.gps_client.start();
+        except Exception:
+            print("Error on gps-client start");
+
 
     def create_websocket(self, ip, port): # create and start websocket
         try: 
@@ -78,7 +85,6 @@ class ADSBWorker:
         def refresh_planes():
             for plane in self.planes:
                 dtime: timedelta = datetime.now(self.tz) - plane.updated;
-                print(dtime.total_seconds())
                 if dtime.total_seconds() > 60:
                     self.planes.remove(plane);
                     self.logger.info(f"Plane instance '{plane.id}' timed out");

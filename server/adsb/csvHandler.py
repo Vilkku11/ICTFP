@@ -37,9 +37,9 @@ class CSVHandler:
     def open_csv_file(self, message):
         try: 
             filename_changed = False;
-            dtime = datetime.datetime.fromtimestamp(message.ts);        
-            dateformat = dtime.strftime("%Y_%m_%d");                          # parse message timestamp
-            comparable_file = self.log_path + "/" + dateformat +"_log.csv";   # omparable filename with full path
+            dtime = datetime.fromtimestamp(message.ts);        
+            dateformat = dtime.strftime("%Y_%m_%d");                         # parse message timestamp
+            comparable_file = self.log_path + "/" + dateformat +"_log.csv";  # omparable filename with full path
             if self.csv_f == None and self.current_file != comparable_file:  # create/change file name
                 self.update_folder_path();
                 self.current_file = self.log_path + "/" + dateformat + "_log.csv";
