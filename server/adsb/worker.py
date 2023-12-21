@@ -208,10 +208,10 @@ class ADSBWorker:
                 self.logger.info(f"Virtual point - { point.id } - deleted");
     
     # calculate distance in WGS84 system between two coordinates to 1 mm resolution
-    async def distance_between(coordinates_a, coordinates_b):
+    async def distance_between(self, coordinates_a, coordinates_b):
         return vincenty(coordinates_a, coordinates_b);
 
-    def heading_between(coordinate_a, coordinate_b):
+    def heading_between(self, coordinate_a, coordinate_b):
         # Extract coordinates
         x1, y1 = coordinate_a
         x2, y2 = coordinate_b

@@ -11,6 +11,10 @@ class WebSocketClient:
         try:
             async with websockets.connect(self.server_uri) as websocket:
                 print("connected");
+
+                #await asyncio.sleep(2);
+                #await websocket.send('{"add":[{"id":"vp1","lat":61.5033155,"long":23.807138}]}');
+
                 while True:
                     message = await websocket.recv();
                     
@@ -27,8 +31,7 @@ class WebSocketClient:
             print("Connection closed on error")
 
         except Exception:
-            print("Unable to connect to server")
-
+            print("Unable to connect to server")      
 
     async def send_message(self, message):
         async with websockets.connect(self.server_uri) as websocket:

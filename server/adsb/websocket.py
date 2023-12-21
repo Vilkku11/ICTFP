@@ -31,7 +31,7 @@ class WebSocketServer:
 
                 try:
                     self.logger.info(message);
-                    self.worker.handle_websocket_msg(message);
+                    await self.worker.handle_websocket_msg(message);
 
                 except TypeError:
                     self.logger.error("Mistyped message: {message}");

@@ -41,10 +41,9 @@ class CSVHandler:
             if self.csv_f is None and self.current_file != comparable_file:
                 self.update_folder_path()
                 self.current_file = os.path.join(self.log_path, f"{dateformat}_log.csv")
-                self.csv_f = open(self.current_file, "a+")
-                
-                if not os.path.exists(self.current_file):
-                    self.add_column_headers(message)
+                self.add_column_headers(message)
+
+            self.csv_f = open(self.current_file, "a+")
                     
         except Exception as e:
             self.logger.error(f"Error on opening file: {self.current_file}: {e}")
