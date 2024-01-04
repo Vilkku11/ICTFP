@@ -56,8 +56,8 @@ project provides zipped docker image for project.
 
     ``make load_docker_image``
 
-        gzip -dk dependencies/docker/docker-python:3.11-slim.tar.gz
-	    docker load -i dependencies/docker/docker-python:3.11-slim.tar
+        gzip -dk dependencies/docker/docker-python-3.11-slim.tar.gz
+	    docker load -i dependencies/docker/docker-python-3.11-slim.tar
 
 2. build project into docker via docker-compose`
 
