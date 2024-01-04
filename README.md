@@ -42,7 +42,7 @@ note: after installation to check dependencies on virtual environment, You can c
 
     # check installed dependencies
     source venv/bin/activate
-    pip freeze > requirements.ts    
+    pip freeze > requirements.txt    
 
 ### **Docker & Docker-Compose**
 * Docker - version: 24.0.7
